@@ -1,0 +1,5289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#F57C00">
+  <meta name="description" content="Gireesh House Swift - House shifting and goods transport in Gowribidanur">
+  <title>Gireesh House Swift</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  >
+
+  <style>
+    :root{
+      --primary:#F57C00;
+      --primary-dark:#E65100;
+      --primary-light:#FFF3E0;
+      --orange-soft:#FFE0B2;
+      --white:#fff;
+      --bg:#F7F7F7;
+      --surface:#fff;
+      --text:#171717;
+      --muted:#707070;
+      --border:#E8E8E8;
+      --success:#16803C;
+      --success-bg:#EAF7EE;
+      --danger:#D32F2F;
+      --danger-bg:#FDECEC;
+      --warning:#A86500;
+      --warning-bg:#FFF7E6;
+      --shadow:0 3px 16px rgba(0,0,0,.08);
+      --shadow-lg:0 12px 35px rgba(0,0,0,.15);
+      --radius:18px;
+      --nav-height:70px;
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    html{
+      scroll-behavior:smooth;
+      background:var(--bg);
+    }
+
+    body{
+      margin:0;
+      font-family:Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    button,
+    input,
+    textarea,
+    select{
+      font:inherit;
+    }
+
+    button{
+      border:0;
+      cursor:pointer;
+    }
+
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .app{
+      min-height:100vh;
+      padding-bottom:calc(var(--nav-height) + env(safe-area-inset-bottom));
+    }
+
+    .page{
+      display:none;
+      min-height:calc(100vh - var(--nav-height));
+      animation:pageIn .18s ease;
+    }
+
+    .page.active{
+      display:block;
+    }
+
+    @keyframes pageIn{
+      from{opacity:0;transform:translateY(4px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    .container{
+      width:min(1180px,100%);
+      margin:auto;
+      padding:18px;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:1000;
+      background:rgba(255,255,255,.96);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--border);
+    }
+
+    .topbar-inner{
+      width:min(1180px,100%);
+      margin:auto;
+      min-height:64px;
+      padding:10px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:11px;
+      min-width:0;
+    }
+
+    .brand-logo{
+      width:43px;
+      height:43px;
+      border-radius:14px;
+      background:var(--primary);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      flex:none;
+      box-shadow:0 5px 14px rgba(245,124,0,.28);
+    }
+
+    .brand-logo .material-icons-round{
+      font-size:25px;
+    }
+
+    .brand-text{
+      min-width:0;
+    }
+
+    .brand-name{
+      font-weight:700;
+      font-size:16px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .brand-sub{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .top-call{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:var(--primary-light);
+      color:var(--primary-dark);
+      flex:none;
+    }
+
+    .hero{
+      background:var(--primary);
+      color:#fff;
+      padding:30px 18px 28px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero:after{
+      content:"";
+      position:absolute;
+      width:190px;
+      height:190px;
+      right:-80px;
+      top:-75px;
+      border:35px solid rgba(255,255,255,.09);
+      border-radius:50%;
+    }
+
+    .hero-content{
+      width:min(1180px,100%);
+      margin:auto;
+      position:relative;
+      z-index:1;
+    }
+
+    .hero-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:7px 11px;
+      border-radius:30px;
+      background:rgba(255,255,255,.16);
+      font-size:12px;
+      font-weight:500;
+      margin-bottom:15px;
+    }
+
+    .hero h1{
+      font-size:clamp(31px,7vw,56px);
+      line-height:1.08;
+      margin:0;
+      max-width:760px;
+      letter-spacing:-1px;
+    }
+
+    .hero p{
+      font-size:15px;
+      line-height:1.6;
+      max-width:650px;
+      margin:15px 0 21px;
+      color:rgba(255,255,255,.93);
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .btn{
+      min-height:46px;
+      padding:0 17px;
+      border-radius:13px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-weight:600;
+      transition:.18s ease;
+      white-space:nowrap;
+    }
+
+    .btn:active{
+      transform:scale(.98);
+    }
+
+    .btn-primary{
+      background:var(--primary);
+      color:#fff;
+      box-shadow:0 5px 14px rgba(245,124,0,.22);
+    }
+
+    .btn-white{
+      background:#fff;
+      color:var(--primary-dark);
+    }
+
+    .btn-outline{
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--border);
+    }
+
+    .btn-danger{
+      background:var(--danger);
+      color:#fff;
+    }
+
+    .btn-success{
+      background:var(--success);
+      color:#fff;
+    }
+
+    .btn-small{
+      min-height:38px;
+      padding:0 12px;
+      border-radius:10px;
+      font-size:13px;
+    }
+
+    .section{
+      padding:22px 0;
+    }
+
+    .section-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .section-title{
+      margin:0;
+      font-size:22px;
+      letter-spacing:-.3px;
+    }
+
+    .section-subtitle{
+      margin:5px 0 0;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .quick-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+
+    .quick-card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      box-shadow:0 2px 9px rgba(0,0,0,.035);
+      text-align:left;
+    }
+
+    .quick-icon{
+      width:43px;
+      height:43px;
+      border-radius:13px;
+      background:var(--primary-light);
+      color:var(--primary-dark);
+      display:grid;
+      place-items:center;
+      flex:none;
+    }
+
+    .quick-card strong{
+      display:block;
+      font-size:14px;
+    }
+
+    .quick-card span{
+      display:block;
+      font-size:11px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
+    .grid{
+      display:grid;
+      gap:14px;
+    }
+
+    .service-grid{
+      grid-template-columns:repeat(1,1fr);
+    }
+
+    .vehicle-grid{
+      grid-template-columns:repeat(1,1fr);
+    }
+
+    .card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:17px;
+      box-shadow:var(--shadow);
+    }
+
+    .service-card,
+    .vehicle-card{
+      display:flex;
+      flex-direction:column;
+      gap:13px;
+    }
+
+    .item-top{
+      display:flex;
+      align-items:flex-start;
+      gap:13px;
+    }
+
+    .item-icon{
+      width:50px;
+      height:50px;
+      border-radius:15px;
+      background:var(--primary-light);
+      color:var(--primary-dark);
+      display:grid;
+      place-items:center;
+      flex:none;
+      overflow:hidden;
+    }
+
+    .item-icon img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .item-info{
+      min-width:0;
+      flex:1;
+    }
+
+    .item-info h3{
+      margin:1px 0 5px;
+      font-size:16px;
+    }
+
+    .item-info p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .price{
+      font-weight:700;
+      color:var(--primary-dark);
+      font-size:14px;
+    }
+
+    .available{
+      color:var(--success);
+      background:var(--success-bg);
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:5px;
+      padding:5px 8px;
+      border-radius:20px;
+      font-size:11px;
+      font-weight:600;
+    }
+
+    .unavailable{
+      color:var(--danger);
+      background:var(--danger-bg);
+    }
+
+    .how-grid{
+      display:grid;
+      gap:10px;
+    }
+
+    .how-step{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:15px;
+      padding:15px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .step-number{
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      background:var(--primary);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-weight:700;
+      flex:none;
+    }
+
+    .how-step strong{
+      font-size:14px;
+    }
+
+    .how-step p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .cash-notice{
+      border:1px solid #FFE0B2;
+      background:#FFF8EF;
+      border-radius:17px;
+      padding:16px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .cash-notice .material-icons-round{
+      color:var(--primary-dark);
+    }
+
+    .cash-notice strong{
+      font-size:14px;
+    }
+
+    .cash-notice p{
+      margin:4px 0 0;
+      color:#6c5844;
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .form-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:17px;
+      box-shadow:var(--shadow);
+      margin-bottom:14px;
+    }
+
+    .form-title{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      margin:0 0 15px;
+      font-size:17px;
+    }
+
+    .form-title .material-icons-round{
+      color:var(--primary);
+      font-size:22px;
+    }
+
+    .form-grid{
+      display:grid;
+      gap:13px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+    }
+
+    .field label{
+      font-size:12px;
+      font-weight:600;
+      color:#454545;
+    }
+
+    .input,
+    .textarea{
+      width:100%;
+      min-height:47px;
+      border:1px solid #DADADA;
+      border-radius:12px;
+      padding:0 13px;
+      outline:none;
+      color:var(--text);
+      background:#fff;
+      transition:.18s;
+    }
+
+    .textarea{
+      min-height:100px;
+      padding:12px 13px;
+      resize:vertical;
+    }
+
+    .input:focus,
+    .textarea:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(245,124,0,.10);
+    }
+
+    .location-box{
+      border:1px solid var(--border);
+      border-radius:15px;
+      overflow:hidden;
+      background:#fff;
+    }
+
+    .location-address{
+      padding:13px;
+      min-height:48px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.45;
+      border-bottom:1px solid var(--border);
+    }
+
+    .location-address.selected{
+      color:var(--text);
+      font-weight:500;
+    }
+
+    .location-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+    }
+
+    .location-actions button{
+      background:#fff;
+      min-height:44px;
+      color:var(--primary-dark);
+      font-weight:600;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+    }
+
+    .location-actions button+button{
+      border-left:1px solid var(--border);
+    }
+
+    .selected-pill{
+      background:var(--primary-light);
+      border:1px solid #FFD3A3;
+      border-radius:13px;
+      padding:11px 12px;
+      display:flex;
+      gap:9px;
+      align-items:flex-start;
+      margin-top:8px;
+    }
+
+    .selected-pill .material-icons-round{
+      color:var(--primary);
+      font-size:20px;
+    }
+
+    .selected-pill div{
+      min-width:0;
+      flex:1;
+    }
+
+    .selected-pill strong{
+      font-size:12px;
+    }
+
+    .selected-pill span{
+      display:block;
+      margin-top:3px;
+      font-size:11px;
+      color:var(--muted);
+      line-height:1.4;
+      word-break:break-word;
+    }
+
+    .selector{
+      width:100%;
+      min-height:52px;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:13px;
+      padding:8px 11px;
+      display:flex;
+      align-items:center;
+      gap:11px;
+      text-align:left;
+    }
+
+    .selector .selector-icon{
+      width:37px;
+      height:37px;
+      border-radius:11px;
+      display:grid;
+      place-items:center;
+      background:var(--primary-light);
+      color:var(--primary-dark);
+      flex:none;
+    }
+
+    .selector-content{
+      min-width:0;
+      flex:1;
+    }
+
+    .selector-content strong{
+      display:block;
+      font-size:13px;
+    }
+
+    .selector-content span{
+      display:block;
+      font-size:11px;
+      color:var(--muted);
+      margin-top:3px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .selector .material-icons-round:last-child{
+      color:#888;
+    }
+
+    .items-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+    }
+
+    .item-choice{
+      min-height:49px;
+      padding:8px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      text-align:left;
+    }
+
+    .item-choice.selected{
+      background:var(--primary-light);
+      border-color:var(--primary);
+      color:var(--primary-dark);
+    }
+
+    .item-choice .material-icons-round{
+      font-size:20px;
+    }
+
+    .item-choice span:last-child{
+      font-size:12px;
+      font-weight:500;
+    }
+
+    .estimate{
+      background:#1F1F1F;
+      color:#fff;
+      border-radius:19px;
+      padding:17px;
+      margin-bottom:14px;
+    }
+
+    .estimate-row{
+      display:flex;
+      justify-content:space-between;
+      gap:15px;
+      align-items:center;
+    }
+
+    .estimate-label{
+      font-size:12px;
+      color:#BDBDBD;
+    }
+
+    .estimate-value{
+      font-size:26px;
+      font-weight:700;
+      color:#fff;
+    }
+
+    .estimate small{
+      display:block;
+      color:#BDBDBD;
+      line-height:1.45;
+      margin-top:8px;
+      font-size:11px;
+    }
+
+    .payment-line{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding-top:11px;
+      margin-top:11px;
+      border-top:1px solid rgba(255,255,255,.12);
+      font-size:12px;
+    }
+
+    .payment-line .material-icons-round{
+      color:#FFB74D;
+    }
+
+    .sticky-submit{
+      position:sticky;
+      bottom:calc(var(--nav-height) + env(safe-area-inset-bottom) + 7px);
+      z-index:20;
+      padding:5px 0;
+    }
+
+    .full-btn{
+      width:100%;
+    }
+
+    .track-form{
+      max-width:600px;
+      margin:auto;
+    }
+
+    .result-card{
+      margin-top:15px;
+    }
+
+    .booking-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+
+    .booking-id{
+      font-size:18px;
+      font-weight:700;
+      color:var(--primary-dark);
+      word-break:break-word;
+    }
+
+    .status-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      padding:6px 9px;
+      border-radius:30px;
+      background:var(--warning-bg);
+      color:var(--warning);
+      font-size:10px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .status-chip.success{
+      background:var(--success-bg);
+      color:var(--success);
+    }
+
+    .status-chip.danger{
+      background:var(--danger-bg);
+      color:var(--danger);
+    }
+
+    .booking-meta{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:5px;
+    }
+
+    .info-list{
+      margin:16px 0 0;
+      display:grid;
+      gap:12px;
+    }
+
+    .info-row{
+      display:flex;
+      gap:11px;
+      align-items:flex-start;
+    }
+
+    .info-row .material-icons-round{
+      color:var(--primary);
+      font-size:20px;
+      flex:none;
+    }
+
+    .info-row div{
+      min-width:0;
+    }
+
+    .info-row strong{
+      display:block;
+      font-size:11px;
+      color:var(--muted);
+      margin-bottom:3px;
+      font-weight:500;
+    }
+
+    .info-row span{
+      display:block;
+      font-size:13px;
+      line-height:1.45;
+      word-break:break-word;
+    }
+
+    .action-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:15px;
+    }
+
+    .timeline{
+      position:relative;
+      margin:19px 0 2px;
+      padding-left:4px;
+    }
+
+    .timeline-item{
+      position:relative;
+      display:flex;
+      gap:12px;
+      min-height:62px;
+    }
+
+    .timeline-item:not(:last-child):after{
+      content:"";
+      position:absolute;
+      left:13px;
+      top:29px;
+      bottom:0;
+      width:2px;
+      background:#E0E0E0;
+    }
+
+    .timeline-dot{
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:#E8E8E8;
+      color:#888;
+      display:grid;
+      place-items:center;
+      flex:none;
+      position:relative;
+      z-index:1;
+    }
+
+    .timeline-item.done .timeline-dot{
+      background:var(--success);
+      color:#fff;
+    }
+
+    .timeline-item.current .timeline-dot{
+      background:var(--primary);
+      color:#fff;
+    }
+
+    .timeline-item.cancelled .timeline-dot{
+      background:var(--danger);
+      color:#fff;
+    }
+
+    .timeline-content{
+      padding-top:2px;
+    }
+
+    .timeline-content strong{
+      display:block;
+      font-size:13px;
+    }
+
+    .timeline-content span{
+      display:block;
+      font-size:10px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
+    .history-list{
+      display:grid;
+      gap:11px;
+    }
+
+    .history-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      box-shadow:0 2px 10px rgba(0,0,0,.04);
+    }
+
+    .history-card-top{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+    }
+
+    .history-card h3{
+      margin:0;
+      font-size:15px;
+    }
+
+    .history-card p{
+      margin:5px 0 0;
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .history-bottom{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      margin-top:12px;
+      padding-top:12px;
+      border-top:1px solid var(--border);
+    }
+
+    .history-price{
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .history-actions{
+      display:flex;
+      gap:6px;
+    }
+
+    .icon-btn{
+      width:38px;
+      height:38px;
+      border-radius:11px;
+      background:#F5F5F5;
+      color:#555;
+      display:grid;
+      place-items:center;
+    }
+
+    .contact-grid{
+      display:grid;
+      gap:11px;
+    }
+
+    .contact-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:17px;
+      padding:16px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .contact-icon{
+      width:45px;
+      height:45px;
+      border-radius:13px;
+      background:var(--primary-light);
+      color:var(--primary-dark);
+      display:grid;
+      place-items:center;
+      flex:none;
+    }
+
+    .contact-card div{
+      min-width:0;
+      flex:1;
+    }
+
+    .contact-card strong{
+      display:block;
+      font-size:13px;
+    }
+
+    .contact-card span{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      margin-top:4px;
+      word-break:break-word;
+    }
+
+    .empty{
+      text-align:center;
+      padding:35px 18px;
+      color:var(--muted);
+      border:1px dashed #D7D7D7;
+      border-radius:17px;
+      background:#fff;
+    }
+
+    .empty .material-icons-round{
+      font-size:40px;
+      color:#BDBDBD;
+      margin-bottom:8px;
+    }
+
+    .empty strong{
+      display:block;
+      color:#444;
+      font-size:14px;
+    }
+
+    .empty p{
+      font-size:12px;
+      line-height:1.5;
+      margin:6px 0 0;
+    }
+
+    .skeleton{
+      background:linear-gradient(90deg,#f1f1f1 25%,#fafafa 37%,#f1f1f1 63%);
+      background-size:400% 100%;
+      animation:skeleton 1.3s infinite;
+      border-radius:12px;
+    }
+
+    @keyframes skeleton{
+      0%{background-position:100% 0}
+      100%{background-position:0 0}
+    }
+
+    .skeleton-card{
+      height:135px;
+      border-radius:18px;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:1500;
+      height:calc(var(--nav-height) + env(safe-area-inset-bottom));
+      padding-bottom:env(safe-area-inset-bottom);
+      background:rgba(255,255,255,.97);
+      backdrop-filter:blur(15px);
+      border-top:1px solid var(--border);
+      display:flex;
+      justify-content:center;
+      box-shadow:0 -5px 20px rgba(0,0,0,.06);
+    }
+
+    .bottom-nav-inner{
+      width:min(600px,100%);
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+    }
+
+    .nav-btn{
+      background:transparent;
+      color:#777;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:3px;
+      font-size:9px;
+      font-weight:500;
+      min-width:0;
+    }
+
+    .nav-btn .material-icons-round{
+      font-size:23px;
+    }
+
+    .nav-btn.active{
+      color:var(--primary-dark);
+      font-weight:700;
+    }
+
+    .nav-btn.active .material-icons-round{
+      background:var(--primary-light);
+      border-radius:20px;
+      padding:3px 12px;
+      font-size:21px;
+    }
+
+    .fab-whatsapp{
+      position:fixed;
+      right:17px;
+      bottom:calc(var(--nav-height) + env(safe-area-inset-bottom) + 15px);
+      width:55px;
+      height:55px;
+      border-radius:50%;
+      z-index:1200;
+      background:#25D366;
+      box-shadow:0 8px 22px rgba(37,211,102,.35);
+      display:grid;
+      place-items:center;
+      color:#fff;
+    }
+
+    .fab-whatsapp svg{
+      width:29px;
+      height:29px;
+      fill:#fff;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:3000;
+      display:none;
+      background:rgba(0,0,0,.45);
+      align-items:flex-end;
+      justify-content:center;
+    }
+
+    .overlay.show{
+      display:flex;
+    }
+
+    .sheet{
+      width:min(680px,100%);
+      max-height:94vh;
+      overflow:auto;
+      background:#fff;
+      border-radius:24px 24px 0 0;
+      padding:9px 17px calc(20px + env(safe-area-inset-bottom));
+      box-shadow:var(--shadow-lg);
+      animation:sheetIn .2s ease;
+    }
+
+    @keyframes sheetIn{
+      from{transform:translateY(100%)}
+      to{transform:translateY(0)}
+    }
+
+    .sheet-handle{
+      width:40px;
+      height:4px;
+      background:#D6D6D6;
+      border-radius:10px;
+      margin:3px auto 15px;
+    }
+
+    .sheet-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:13px;
+    }
+
+    .sheet-head h2{
+      margin:0;
+      font-size:18px;
+    }
+
+    .close-btn{
+      width:38px;
+      height:38px;
+      border-radius:50%;
+      background:#F5F5F5;
+      display:grid;
+      place-items:center;
+      color:#555;
+      flex:none;
+    }
+
+    .map-sheet{
+      padding:0 0 calc(14px + env(safe-area-inset-bottom));
+      max-height:100vh;
+      height:100vh;
+      border-radius:0;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .map-head{
+      padding:9px 14px 10px;
+      flex:none;
+    }
+
+    .map-search{
+      display:flex;
+      gap:7px;
+      align-items:center;
+    }
+
+    .map-search .input{
+      flex:1;
+    }
+
+    .map-container{
+      flex:1;
+      min-height:300px;
+      position:relative;
+    }
+
+    #map{
+      width:100%;
+      height:100%;
+      min-height:360px;
+    }
+
+    .map-bottom{
+      flex:none;
+      padding:12px 14px 0;
+      background:#fff;
+      box-shadow:0 -5px 20px rgba(0,0,0,.08);
+    }
+
+    .selected-location-text{
+      background:#F8F8F8;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12px;
+      line-height:1.45;
+      margin-bottom:9px;
+      min-height:43px;
+    }
+
+    .vehicle-options,
+    .service-options{
+      display:grid;
+      gap:8px;
+    }
+
+    .select-option{
+      width:100%;
+      padding:11px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      gap:11px;
+      text-align:left;
+    }
+
+    .select-option.selected{
+      border-color:var(--primary);
+      background:var(--primary-light);
+    }
+
+    .select-option .option-icon{
+      width:43px;
+      height:43px;
+      border-radius:12px;
+      background:#F5F5F5;
+      display:grid;
+      place-items:center;
+      color:var(--primary-dark);
+      flex:none;
+    }
+
+    .select-option.selected .option-icon{
+      background:#fff;
+    }
+
+    .select-option .option-info{
+      flex:1;
+      min-width:0;
+    }
+
+    .select-option strong{
+      display:block;
+      font-size:13px;
+    }
+
+    .select-option small{
+      display:block;
+      color:var(--muted);
+      font-size:10px;
+      margin-top:4px;
+      line-height:1.4;
+    }
+
+    .check{
+      width:23px;
+      height:23px;
+      border-radius:50%;
+      border:2px solid #C9C9C9;
+      display:grid;
+      place-items:center;
+      flex:none;
+    }
+
+    .select-option.selected .check{
+      border-color:var(--primary);
+      background:var(--primary);
+      color:#fff;
+    }
+
+    .dialog-overlay{
+      align-items:center;
+      padding:17px;
+    }
+
+    .dialog{
+      width:min(500px,100%);
+      max-height:90vh;
+      overflow:auto;
+      background:#fff;
+      border-radius:22px;
+      padding:19px;
+      box-shadow:var(--shadow-lg);
+      animation:dialogIn .16s ease;
+    }
+
+    @keyframes dialogIn{
+      from{opacity:0;transform:scale(.96)}
+      to{opacity:1;transform:scale(1)}
+    }
+
+    .dialog h2{
+      margin:0;
+      font-size:19px;
+    }
+
+    .dialog-sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+      margin:6px 0 15px;
+    }
+
+    .confirm-list{
+      display:grid;
+      gap:9px;
+      background:#F8F8F8;
+      border-radius:15px;
+      padding:13px;
+    }
+
+    .confirm-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:15px;
+      font-size:12px;
+    }
+
+    .confirm-row span:first-child{
+      color:var(--muted);
+      flex:none;
+    }
+
+    .confirm-row span:last-child{
+      text-align:right;
+      font-weight:500;
+      word-break:break-word;
+    }
+
+    .dialog-actions{
+      display:flex;
+      gap:8px;
+      margin-top:15px;
+    }
+
+    .dialog-actions .btn{
+      flex:1;
+    }
+
+    .success-screen{
+      text-align:center;
+      padding:25px 4px 10px;
+    }
+
+    .success-icon{
+      width:76px;
+      height:76px;
+      border-radius:50%;
+      background:var(--success-bg);
+      color:var(--success);
+      display:grid;
+      place-items:center;
+      margin:0 auto 14px;
+    }
+
+    .success-icon .material-icons-round{
+      font-size:43px;
+    }
+
+    .success-screen h2{
+      margin:0;
+      font-size:24px;
+    }
+
+    .success-screen p{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .success-booking-id{
+      background:var(--primary-light);
+      border:1px solid #FFD3A3;
+      border-radius:15px;
+      padding:13px;
+      margin:16px 0;
+    }
+
+    .success-booking-id small{
+      display:block;
+      color:var(--muted);
+      font-size:10px;
+    }
+
+    .success-booking-id strong{
+      display:block;
+      color:var(--primary-dark);
+      font-size:22px;
+      margin-top:4px;
+      letter-spacing:.5px;
+    }
+
+    .loader-overlay{
+      position:fixed;
+      inset:0;
+      z-index:5000;
+      background:rgba(255,255,255,.76);
+      backdrop-filter:blur(4px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .loader-overlay.show{
+      display:flex;
+    }
+
+    .loader-box{
+      min-width:170px;
+      background:#fff;
+      border-radius:17px;
+      box-shadow:var(--shadow-lg);
+      padding:20px;
+      text-align:center;
+    }
+
+    .spinner{
+      width:34px;
+      height:34px;
+      border:3px solid #FFE0B2;
+      border-top-color:var(--primary);
+      border-radius:50%;
+      animation:spin .75s linear infinite;
+      margin:0 auto 11px;
+    }
+
+    @keyframes spin{
+      to{transform:rotate(360deg)}
+    }
+
+    .loader-box strong{
+      display:block;
+      font-size:13px;
+    }
+
+    .loader-box span{
+      display:block;
+      color:var(--muted);
+      font-size:10px;
+      margin-top:4px;
+    }
+
+    .toast-wrap{
+      position:fixed;
+      left:50%;
+      bottom:calc(var(--nav-height) + env(safe-area-inset-bottom) + 16px);
+      transform:translateX(-50%);
+      z-index:6000;
+      width:min(calc(100% - 30px),430px);
+      pointer-events:none;
+    }
+
+    .toast{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      background:#fff;
+      color:#222;
+      border:1px solid var(--border);
+      box-shadow:var(--shadow-lg);
+      border-radius:13px;
+      padding:12px 14px;
+      font-size:12px;
+      font-weight:500;
+      animation:toastIn .2s ease;
+    }
+
+    .toast.success .material-icons-round{color:var(--success)}
+    .toast.error .material-icons-round{color:var(--danger)}
+    .toast.warning .material-icons-round{color:var(--warning)}
+    .toast.info .material-icons-round{color:var(--primary)}
+
+    @keyframes toastIn{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    .map-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-top:8px;
+    }
+
+    .small-note{
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.5;
+    }
+
+    .hidden{
+      display:none!important;
+    }
+
+    .other-wrap{
+      margin-top:9px;
+    }
+
+    .brand-large{
+      padding:20px 0 5px;
+    }
+
+    .brand-large h2{
+      margin:0;
+      font-size:25px;
+    }
+
+    .brand-large p{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+      margin:7px 0 0;
+    }
+
+    @media (min-width:600px){
+      .quick-grid{
+        grid-template-columns:repeat(4,1fr);
+      }
+
+      .service-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .vehicle-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .items-grid{
+        grid-template-columns:repeat(3,1fr);
+      }
+
+      .how-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .contact-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .form-grid.two{
+        grid-template-columns:repeat(2,1fr);
+      }
+    }
+
+    @media (min-width:900px){
+      :root{
+        --nav-height:0px;
+      }
+
+      .app{
+        padding-bottom:0;
+      }
+
+      .bottom-nav{
+        position:sticky;
+        top:0;
+        bottom:auto;
+        height:58px;
+        padding:0;
+        border-top:0;
+        border-bottom:1px solid var(--border);
+        box-shadow:none;
+      }
+
+      .bottom-nav-inner{
+        max-width:760px;
+        grid-template-columns:repeat(5,1fr);
+      }
+
+      .nav-btn{
+        flex-direction:row;
+        gap:7px;
+        font-size:12px;
+      }
+
+      .nav-btn.active .material-icons-round{
+        padding:3px 7px;
+      }
+
+      .fab-whatsapp{
+        bottom:24px;
+      }
+
+      .toast-wrap{
+        bottom:24px;
+      }
+
+      .sticky-submit{
+        bottom:15px;
+      }
+
+      .hero{
+        padding:58px 30px 52px;
+      }
+
+      .container{
+        padding:24px;
+      }
+
+      .service-grid{
+        grid-template-columns:repeat(3,1fr);
+      }
+
+      .vehicle-grid{
+        grid-template-columns:repeat(3,1fr);
+      }
+
+      .contact-grid{
+        grid-template-columns:repeat(4,1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-logo">
+          <span class="material-icons-round">local_shipping</span>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name" id="businessNameTop">Gireesh House Swift</div>
+          <div class="brand-sub" id="businessAreaTop">Gowribidanur • 561208</div>
+        </div>
+      </div>
+
+      <a class="top-call" href="tel:+919741651293" aria-label="Call">
+        <span class="material-icons-round">call</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <main id="page-home" class="page active">
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="material-icons-round" style="font-size:16px">verified</span>
+          Trusted local transport service
+        </div>
+
+        <h1 id="heroTagline">Move Anything. Anywhere. Swift &amp; Safe.</h1>
+
+        <p>
+          Reliable house shifting, furniture transportation and goods transport
+          services around Gowribidanur.
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn btn-white" onclick="navigate('book')">
+            <span class="material-icons-round">calendar_month</span>
+            Book a Service
+          </button>
+
+          <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="navigate('track')">
+            <span class="material-icons-round">local_shipping</span>
+            Track Booking
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+
+      <section class="section">
+        <div class="quick-grid">
+          <button class="quick-card" onclick="navigate('book')">
+            <div class="quick-icon"><span class="material-icons-round">add_box</span></div>
+            <div>
+              <strong>Book Now</strong>
+              <span>Schedule your move</span>
+            </div>
+          </button>
+
+          <button class="quick-card" onclick="navigate('track')">
+            <div class="quick-icon"><span class="material-icons-round">location_searching</span></div>
+            <div>
+              <strong>Track Booking</strong>
+              <span>Check live status</span>
+            </div>
+          </button>
+
+          <button class="quick-card" onclick="navigate('history')">
+            <div class="quick-icon"><span class="material-icons-round">history</span></div>
+            <div>
+              <strong>My Bookings</strong>
+              <span>View booking history</span>
+            </div>
+          </button>
+
+          <button class="quick-card" onclick="openWhatsApp()">
+            <div class="quick-icon">
+              <svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor">
+                <path d="M20.52 3.48A11.88 11.88 0 0 0 12.05 0C5.48 0 .13 5.35.13 11.92c0 2.1.55 4.16 1.59 5.97L.03 24l6.25-1.64a11.9 11.9 0 0 0 5.77 1.48h.01c6.57 0 11.92-5.35 11.92-11.92 0-3.18-1.23-6.17-3.46-8.44ZM12.06 21.8h-.01a9.86 9.86 0 0 1-5.02-1.37l-.36-.21-3.71.98.99-3.62-.23-.37a9.84 9.84 0 0 1-1.51-5.29C2.21 6.49 6.63 2.07 12.05 2.07c2.63 0 5.1 1.03 6.96 2.89a9.82 9.82 0 0 1 2.89 6.97c0 5.42-4.42 9.84-9.84 9.84Zm5.4-7.37c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.76.96-.93 1.16-.17.2-.34.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.74-1.64-2.04-.17-.3-.02-.46.13-.61.14-.14.3-.34.44-.51.15-.17.2-.29.3-.49.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.03 1.01-1.03 2.47s1.06 2.87 1.2 3.07c.15.2 2.09 3.2 5.07 4.49.71.31 1.26.49 1.69.63.71.23 1.35.2 1.86.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.12-.27-.2-.57-.35Z"/>
+              </svg>
+            </div>
+            <div>
+              <strong>WhatsApp</strong>
+              <span>Chat with us</span>
+            </div>
+          </button>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Our Services</h2>
+            <p class="section-subtitle">Choose the service that matches your move.</p>
+          </div>
+          <button class="btn btn-outline btn-small" onclick="navigate('services')">View All</button>
+        </div>
+
+        <div id="homeServices" class="grid service-grid">
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Available Vehicles</h2>
+            <p class="section-subtitle">Vehicles shown here are currently available.</p>
+          </div>
+          <button class="btn btn-outline btn-small" onclick="navigate('vehicles')">View All</button>
+        </div>
+
+        <div id="homeVehicles" class="grid vehicle-grid">
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Simple booking from your phone.</p>
+          </div>
+        </div>
+
+        <div class="how-grid">
+          <div class="how-step">
+            <div class="step-number">1</div>
+            <div>
+              <strong>Book your service</strong>
+              <p>Enter your pickup, destination, date, items and vehicle.</p>
+            </div>
+          </div>
+
+          <div class="how-step">
+            <div class="step-number">2</div>
+            <div>
+              <strong>Admin confirms</strong>
+              <p>Your booking is reviewed and the final price is confirmed.</p>
+            </div>
+          </div>
+
+          <div class="how-step">
+            <div class="step-number">3</div>
+            <div>
+              <strong>Vehicle arrives</strong>
+              <p>Track the progress of your booking from this website.</p>
+            </div>
+          </div>
+
+          <div class="how-step">
+            <div class="step-number">4</div>
+            <div>
+              <strong>Pay after service</strong>
+              <p>Payment is collected in cash only after the service is completed.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="cash-notice">
+          <span class="material-icons-round">payments</span>
+          <div>
+            <strong>CASH ONLY</strong>
+            <p>No UPI, cards, wallets or online payment gateway. Payment is collected in cash after service completion.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- SERVICES -->
+  <main id="page-services" class="page">
+    <div class="container">
+      <div class="brand-large">
+        <h2>Services</h2>
+        <p>Professional shifting and transport services for your local move.</p>
+      </div>
+
+      <div id="servicesList" class="grid service-grid">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- VEHICLES -->
+  <main id="page-vehicles" class="page">
+    <div class="container">
+      <div class="brand-large">
+        <h2>Vehicles</h2>
+        <p>Only vehicles currently marked as available are shown for booking.</p>
+      </div>
+
+      <div id="vehiclesList" class="grid vehicle-grid">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- BOOK -->
+  <main id="page-book" class="page">
+    <div class="container">
+      <div class="brand-large">
+        <h2>Book a Service</h2>
+        <p>Fill in the details below. You can select exact pickup and drop locations on the map.</p>
+      </div>
+
+      <form id="bookingForm" onsubmit="event.preventDefault();showBookingConfirmation()">
+
+        <section class="form-card">
+          <h3 class="form-title">
+            <span class="material-icons-round">person</span>
+            Customer Details
+          </h3>
+
+          <div class="form-grid two">
+            <div class="field">
+              <label for="customerName">Customer Name *</label>
+              <input id="customerName" class="input" type="text" maxlength="80" autocomplete="name" placeholder="Enter your name" required>
+            </div>
+
+            <div class="field">
+              <label for="customerPhone">Mobile Number *</label>
+              <input id="customerPhone" class="input" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="10-digit mobile number" required>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <h3 class="form-title">
+            <span class="material-icons-round">my_location</span>
+            Pickup Location
+          </h3>
+
+          <div class="field">
+            <label for="pickupAddressInput">Pickup Address *</label>
+            <input
+              id="pickupAddressInput"
+              class="input"
+              type="text"
+              maxlength="300"
+              placeholder="Enter pickup address"
+              required
+            >
+          </div>
+
+          <div class="location-box" style="margin-top:9px">
+            <div id="pickupSelectedAddress" class="location-address">
+              No map location selected yet.
+            </div>
+
+            <div class="location-actions">
+              <button type="button" onclick="openMapPicker('pickup')">
+                <span class="material-icons-round">map</span>
+                Select on Map
+              </button>
+
+              <button type="button" onclick="useCurrentLocation('pickup')">
+                <span class="material-icons-round">my_location</span>
+                Current Location
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <h3 class="form-title">
+            <span class="material-icons-round">location_on</span>
+            Drop / Delivery Location
+          </h3>
+
+          <div class="field">
+            <label for="deliveryAddressInput">Destination Address *</label>
+            <input
+              id="deliveryAddressInput"
+              class="input"
+              type="text"
+              maxlength="300"
+              placeholder="Enter destination address"
+              required
+            >
+          </div>
+
+          <div class="location-box" style="margin-top:9px">
+            <div id="deliverySelectedAddress" class="location-address">
+              No map location selected yet.
+            </div>
+
+            <div class="location-actions">
+              <button type="button" onclick="openMapPicker('delivery')">
+                <span class="material-icons-round">map</span>
+                Select on Map
+              </button>
+
+              <button type="button" onclick="useCurrentLocation('delivery')">
+                <span class="material-icons-round">my_location</span>
+                Current Location
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <h3 class="form-title">
+            <span class="material-icons-round">event</span>
+            Moving Details
+          </h3>
+
+          <div class="form-grid two">
+            <div class="field">
+              <label for="movingDate">Moving Date *</label>
+              <input id="movingDate" class="input" type="date" required>
+            </div>
+
+            <div class="field">
+              <label for="movingTime">Moving Time *</label>
+              <input id="movingTime" class="input" type="time" required>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <h3 class="form-title">
+            <span class="material-icons-round">category</span>
+            Service
+          </h3>
+
+          <button type="button" class="selector" onclick="openServiceSelector()">
+            <div class="selector-icon">
+              <span class="material-icons-round" id="selectedServiceIcon">home_work</span>
+            </div>
+
+            <div class="selector-content">
+              <strong id="selectedServiceName">Choose a service</strong>
+              <span id="selectedServiceDescription">Tap to select</span>
+            </div>
+
+            <span class="material-icons-round">expand_more</span>
+          </button>
+        </section>
+
+        <section class="form-card">
+          <h3 class="form-title">
+            <span class="material-icons-round">local_shipping</span>
+            Vehicle
+          </h3>
+
+          <button type="button" class="selector" onclick="openVehicleSelector()">
+            <div class="selector-icon">
+              <span class="material-icons-round">local_shipping</span>
+            </div>
+
+            <div class="selector-content">
+              <strong id="selectedVehicleName">Choose a vehicle</strong>
+              <span id="selectedVehicleDescription">Only currently available vehicles can be selected</span>
+            </div>
+
+            <span class="material-icons-round">expand_more</span>
+          </button>
+        </section>
+
+        <section class="form-card">
+          <h3 class="form-title">
+            <span class="material-icons-round">inventory_2</span>
+            Items to Move
+          </h3>
+
+          <div id="itemsGrid" class="items-grid"></div>
+
+          <div id="otherItemWrap" class="other-wrap hidden">
+            <div class="field">
+              <label for="otherItem">Specify Other Item *</label>
+              <input id="otherItem" class="input" type="text" maxlength="100" placeholder="Enter item name">
+            </div>
+          </div>
+        </section>
+
+        <section class="estimate">
+          <div class="estimate-row">
+            <div>
+              <div class="estimate-label">Estimated Price</div>
+              <div class="estimate-value" id="estimateValue">₹0</div>
+            </div>
+            <span class="material-icons-round" style="font-size:34px;color:#FFB74D">receipt_long</span>
+          </div>
+
+          <small>
+            This is only an estimate. The final price will be confirmed by the admin after reviewing your booking.
+          </small>
+
+          <div class="payment-line">
+            <span class="material-icons-round">payments</span>
+            <strong>Payment: CASH ONLY after service completion</strong>
+          </div>
+        </section>
+
+        <div class="sticky-submit">
+          <button id="continueBookingBtn" class="btn btn-primary full-btn" type="submit">
+            <span class="material-icons-round">arrow_forward</span>
+            Review Booking
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- TRACK -->
+  <main id="page-track" class="page">
+    <div class="container">
+      <div class="brand-large">
+        <h2>Track Booking</h2>
+        <p>Enter your Booking ID and the same mobile number used during booking.</p>
+      </div>
+
+      <div class="form-card track-form">
+        <div class="form-grid">
+          <div class="field">
+            <label for="trackBookingId">Booking ID *</label>
+            <input id="trackBookingId" class="input" type="text" maxlength="40" placeholder="Example: HS-20260910-001">
+          </div>
+
+          <div class="field">
+            <label for="trackPhone">Mobile Number *</label>
+            <input id="trackPhone" class="input" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+          </div>
+
+          <button id="trackBtn" class="btn btn-primary full-btn" type="button" onclick="trackBooking()">
+            <span class="material-icons-round">search</span>
+            Track Booking
+          </button>
+        </div>
+      </div>
+
+      <div id="trackResult"></div>
+    </div>
+  </main>
+
+  <!-- HISTORY -->
+  <main id="page-history" class="page">
+    <div class="container">
+      <div class="brand-large">
+        <h2>Booking History</h2>
+        <p>Enter your mobile number to view bookings created with that number.</p>
+      </div>
+
+      <div class="form-card track-form">
+        <div class="form-grid">
+          <div class="field">
+            <label for="historyPhone">Mobile Number *</label>
+            <input id="historyPhone" class="input" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+          </div>
+
+          <button class="btn btn-primary full-btn" type="button" onclick="loadHistory()">
+            <span class="material-icons-round">history</span>
+            Load My Bookings
+          </button>
+        </div>
+      </div>
+
+      <div id="historyResult"></div>
+    </div>
+  </main>
+
+  <!-- CONTACT -->
+  <main id="page-contact" class="page">
+    <div class="container">
+      <div class="brand-large">
+        <h2>Contact Us</h2>
+        <p>Need help with your move? Contact Gireesh House Swift directly.</p>
+      </div>
+
+      <div class="contact-grid">
+
+        <div class="contact-card">
+          <div class="contact-icon">
+            <span class="material-icons-round">call</span>
+          </div>
+          <div>
+            <strong>Phone</strong>
+            <span id="contactPhone">+91 97416 51293</span>
+          </div>
+          <a class="icon-btn" href="tel:+919741651293" aria-label="Call">
+            <span class="material-icons-round">call</span>
+          </a>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon" style="color:#16803C;background:#EAF7EE">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path d="M20.52 3.48A11.88 11.88 0 0 0 12.05 0C5.48 0 .13 5.35.13 11.92c0 2.1.55 4.16 1.59 5.97L.03 24l6.25-1.64a11.9 11.9 0 0 0 5.77 1.48h.01c6.57 0 11.92-5.35 11.92-11.92 0-3.18-1.23-6.17-3.46-8.44ZM12.06 21.8h-.01a9.86 9.86 0 0 1-5.02-1.37l-.36-.21-3.71.98.99-3.62-.23-.37a9.84 9.84 0 0 1-1.51-5.29C2.21 6.49 6.63 2.07 12.05 2.07c2.63 0 5.1 1.03 6.96 2.89a9.82 9.82 0 0 1 2.89 6.97c0 5.42-4.42 9.84-9.84 9.84Zm5.4-7.37c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.76.96-.93 1.16-.17.2-.34.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.74-1.64-2.04-.17-.3-.02-.46.13-.61.14-.14.3-.34.44-.51.15-.17.2-.29.3-.49.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.03 1.01-1.03 2.47s1.06 2.87 1.2 3.07c.15.2 2.09 3.2 5.07 4.49.71.31 1.26.49 1.69.63.71.23 1.35.2 1.86.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.12-.27-.2-.57-.35Z"/>
+            </svg>
+          </div>
+          <div>
+            <strong>WhatsApp</strong>
+            <span>Chat with Gireesh House Swift</span>
+          </div>
+          <button class="icon-btn" onclick="openWhatsApp()" aria-label="WhatsApp">
+            <span class="material-icons-round">open_in_new</span>
+          </button>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">
+            <span class="material-icons-round">photo_camera</span>
+          </div>
+          <div>
+            <strong>Instagram</strong>
+            <span>@girishgiri9762</span>
+          </div>
+          <button class="icon-btn" onclick="openInstagram()" aria-label="Instagram">
+            <span class="material-icons-round">open_in_new</span>
+          </button>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">
+            <span class="material-icons-round">location_on</span>
+          </div>
+          <div>
+            <strong>Service Area</strong>
+            <span id="contactLocation">Gowribidanur, Karnataka – 561208</span>
+          </div>
+          <button class="icon-btn" onclick="openBusinessMaps()" aria-label="Maps">
+            <span class="material-icons-round">map</span>
+          </button>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="cash-notice">
+          <span class="material-icons-round">payments</span>
+          <div>
+            <strong>CASH ONLY AFTER SERVICE</strong>
+            <p>There is no online payment option on this website.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="nav-btn active" data-page="home" onclick="navigate('home')">
+      <span class="material-icons-round">home</span>
+      Home
+    </button>
+
+    <button class="nav-btn" data-page="services" onclick="navigate('services')">
+      <span class="material-icons-round">category</span>
+      Services
+    </button>
+
+    <button class="nav-btn" data-page="book" onclick="navigate('book')">
+      <span class="material-icons-round">add_circle</span>
+      Book
+    </button>
+
+    <button class="nav-btn" data-page="track" onclick="navigate('track')">
+      <span class="material-icons-round">location_searching</span>
+      Track
+    </button>
+
+    <button class="nav-btn" data-page="contact" onclick="navigate('contact')">
+      <span class="material-icons-round">support_agent</span>
+      Contact
+    </button>
+  </div>
+</nav>
+
+<!-- WHATSAPP -->
+<button class="fab-whatsapp" onclick="openWhatsApp()" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24">
+    <path d="M20.52 3.48A11.88 11.88 0 0 0 12.05 0C5.48 0 .13 5.35.13 11.92c0 2.1.55 4.16 1.59 5.97L.03 24l6.25-1.64a11.9 11.9 0 0 0 5.77 1.48h.01c6.57 0 11.92-5.35 11.92-11.92 0-3.18-1.23-6.17-3.46-8.44ZM12.06 21.8h-.01a9.86 9.86 0 0 1-5.02-1.37l-.36-.21-3.71.98.99-3.62-.23-.37a9.84 9.84 0 0 1-1.51-5.29C2.21 6.49 6.63 2.07 12.05 2.07c2.63 0 5.1 1.03 6.96 2.89a9.82 9.82 0 0 1 2.89 6.97c0 5.42-4.42 9.84-9.84 9.84Zm5.4-7.37c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.76.96-.93 1.16-.17.2-.34.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.74-1.64-2.04-.17-.3-.02-.46.13-.61.14-.14.3-.34.44-.51.15-.17.2-.29.3-.49.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.03 1.01-1.03 2.47s1.06 2.87 1.2 3.07c.15.2 2.09 3.2 5.07 4.49.71.31 1.26.49 1.69.63.71.23 1.35.2 1.86.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.12-.27-.2-.57-.35Z"/>
+  </svg>
+</button>
+
+<!-- LOCATION SHEET -->
+<div id="mapOverlay" class="overlay">
+  <div class="sheet map-sheet">
+    <div class="map-head">
+      <div class="sheet-head">
+        <h2 id="mapTitle">Select Pickup Location</h2>
+        <button class="close-btn" onclick="closeMapPicker()">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+
+      <div class="map-search">
+        <input id="mapSearchInput" class="input" type="text" placeholder="Search place or address">
+        <button class="btn btn-primary btn-small" onclick="searchMapLocation()">
+          <span class="material-icons-round">search</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+
+    <div class="map-bottom">
+      <div id="mapSelectedText" class="selected-location-text">
+        Move the map or search for a location.
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" style="flex:1" onclick="useCurrentLocation(mapTarget)">
+          <span class="material-icons-round">my_location</span>
+          Current Location
+        </button>
+
+        <button class="btn btn-primary" style="flex:1" onclick="confirmMapLocation()">
+          <span class="material-icons-round">check</span>
+          Confirm Location
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICE SELECTOR -->
+<div id="serviceOverlay" class="overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-head">
+      <h2>Choose Service</h2>
+      <button class="close-btn" onclick="closeOverlay('serviceOverlay')">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <div id="serviceOptions" class="service-options"></div>
+  </div>
+</div>
+
+<!-- VEHICLE SELECTOR -->
+<div id="vehicleOverlay" class="overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-head">
+      <h2>Choose Available Vehicle</h2>
+      <button class="close-btn" onclick="closeOverlay('vehicleOverlay')">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <div id="vehicleOptions" class="vehicle-options"></div>
+  </div>
+</div>
+
+<!-- CONFIRMATION -->
+<div id="confirmOverlay" class="overlay dialog-overlay">
+  <div class="dialog">
+    <h2>Confirm Booking</h2>
+    <p class="dialog-sub">
+      Please check the details carefully before creating your booking.
+    </p>
+
+    <div id="confirmContent" class="confirm-list"></div>
+
+    <div class="dialog-actions">
+      <button class="btn btn-outline" onclick="closeOverlay('confirmOverlay')">
+        Go Back
+      </button>
+
+      <button id="confirmBookingBtn" class="btn btn-primary" onclick="createBooking()">
+        <span class="material-icons-round">check_circle</span>
+        Confirm Booking
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING DETAILS -->
+<div id="detailsOverlay" class="overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-head">
+      <h2>Booking Details</h2>
+      <button class="close-btn" onclick="closeOverlay('detailsOverlay')">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <div id="detailsContent"></div>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div id="successOverlay" class="overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="success-screen">
+      <div class="success-icon">
+        <span class="material-icons-round">check_circle</span>
+      </div>
+
+      <h2>Booking Confirmed 🎉</h2>
+      <p>Your booking has been created successfully.</p>
+
+      <div class="success-booking-id">
+        <small>BOOKING ID</small>
+        <strong id="successBookingId">HS-00000000-000</strong>
+      </div>
+
+      <div id="successSummary" class="confirm-list" style="text-align:left"></div>
+
+      <div class="dialog-actions">
+        <button class="btn btn-outline" onclick="copySuccessBookingId()">
+          <span class="material-icons-round">content_copy</span>
+          Copy ID
+        </button>
+
+        <button class="btn btn-success" onclick="openSuccessWhatsApp()">
+          <span class="material-icons-round">whatsapp</span>
+          WhatsApp
+        </button>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn btn-primary" onclick="closeSuccessAndTrack()">
+          <span class="material-icons-round">location_searching</span>
+          Track Booking
+        </button>
+
+        <button class="btn btn-outline" onclick="closeOverlay('successOverlay');navigate('home')">
+          Home
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loaderOverlay" class="loader-overlay">
+  <div class="loader-box">
+    <div class="spinner"></div>
+    <strong id="loaderText">Loading...</strong>
+    <span>Please wait</span>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastWrap" class="toast-wrap"></div>
+
+<script type="module">
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+
+  import {
+    getFirestore,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    limit,
+    runTransaction,
+    addDoc,
+    setDoc,
+    onSnapshot,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+  import {
+    getStorage
+  } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyATkWrqOWeHKkK6hU49QtOQS1yVecnVM-U",
+    authDomain: "swift-servives.firebaseapp.com",
+    projectId: "swift-servives",
+    storageBucket: "swift-servives.firebasestorage.app",
+    messagingSenderId: "184945870251",
+    appId: "1:184945870251:web:3752922ce2373f8e607eee"
+  };
+
+  let app;
+  let db;
+  let storage;
+
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    storage = getStorage(app);
+    window.firebaseReady = true;
+  } catch(error) {
+    console.error("Firebase initialization failed:", error);
+    window.firebaseReady = false;
+  }
+
+  window.db = db;
+
+  const FALLBACK_SERVICES = [
+    {
+      id:"house-shifting",
+      name:"House Shifting",
+      description:"Reliable local house shifting for homes and apartments.",
+      icon:"home_work",
+      startingPrice:1500,
+      active:true
+    },
+    {
+      id:"furniture-transport",
+      name:"Furniture Transport",
+      description:"Safe transportation for sofas, beds, tables and furniture.",
+      icon:"chair",
+      startingPrice:800,
+      active:true
+    },
+    {
+      id:"goods-transport",
+      name:"Goods Transport",
+      description:"Transport boxes, appliances and other goods safely.",
+      icon:"inventory_2",
+      startingPrice:700,
+      active:true
+    },
+    {
+      id:"office-shifting",
+      name:"Office Shifting",
+      description:"Move office furniture, equipment and packed goods.",
+      icon:"business",
+      startingPrice:1800,
+      active:true
+    }
+  ];
+
+  const FALLBACK_VEHICLES = [
+    {
+      id:"mini-truck",
+      name:"Mini Truck",
+      capacity:"Up to 1 Ton",
+      description:"Suitable for small household moves and goods.",
+      icon:"local_shipping",
+      status:"AVAILABLE",
+      active:true
+    },
+    {
+      id:"goods-auto",
+      name:"Goods Auto",
+      capacity:"Up to 500 Kg",
+      description:"Compact option for smaller loads.",
+      icon:"airport_shuttle",
+      status:"AVAILABLE",
+      active:true
+    },
+    {
+      id:"pickup-truck",
+      name:"Pickup Truck",
+      capacity:"Up to 1.5 Ton",
+      description:"Good for furniture and medium-size loads.",
+      icon:"local_shipping",
+      status:"AVAILABLE",
+      active:true
+    }
+  ];
+
+  const ITEM_OPTIONS = [
+    ["sofa","Sofa","weekend"],
+    ["bed","Bed","bed"],
+    ["mattress","Mattress","bed"],
+    ["table","Table","table_restaurant"],
+    ["chair","Chair","chair"],
+    ["tv","TV","tv"],
+    ["refrigerator","Refrigerator","kitchen"],
+    ["washing_machine","Washing Machine","local_laundry_service"],
+    ["cupboard","Cupboard","door_sliding"],
+    ["boxes","Boxes","inventory_2"],
+    ["other","Other","add_box"]
+  ];
+
+  const STATUS_ORDER = [
+    "PENDING",
+    "CONFIRMED",
+    "VEHICLE_ASSIGNED",
+    "IN_TRANSIT",
+    "DELIVERED",
+    "COMPLETED"
+  ];
+
+  let services = [];
+  let vehicles = [];
+
+  let selectedService = null;
+  let selectedVehicle = null;
+  let selectedItems = [];
+
+  let pickupLocation = null;
+  let deliveryLocation = null;
+
+  let map = null;
+  let mapMarker = null;
+  let mapTarget = null;
+  let mapSelected = null;
+
+  let lastTrackedBooking = null;
+  let lastCreatedBooking = null;
+
+  let settingsUnsubscribe = null;
+
+  const businessDefaults = {
+    name:"Gireesh House Swift",
+    tagline:"Move Anything. Anywhere. Swift & Safe.",
+    phone:"+91 97416 51293",
+    whatsapp:"+919741651293",
+    instagram:"girishgiri9762",
+    serviceArea:"Gowribidanur, Karnataka – 561208",
+    mapsQuery:"Gowribidanur, Karnataka 561208"
+  };
+
+  let business = {...businessDefaults};
+
+  function $(id){
+    return document.getElementById(id);
+  }
+
+  window.$ = $;
+
+  function escapeHTML(value){
+    return String(value ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function formatMoney(value){
+    const number = Number(value);
+    if(!Number.isFinite(number)) return "₹0";
+
+    return new Intl.NumberFormat("en-IN",{
+      style:"currency",
+      currency:"INR",
+      maximumFractionDigits:0
+    }).format(number);
+  }
+
+  function normalizePhone(value){
+    return String(value || "").replace(/\D/g,"").slice(-10);
+  }
+
+  function validIndianMobile(value){
+    return /^[6-9]\d{9}$/.test(normalizePhone(value));
+  }
+
+  function showLoader(text="Loading..."){
+    $("loaderText").textContent = text;
+    $("loaderOverlay").classList.add("show");
+  }
+
+  function hideLoader(){
+    $("loaderOverlay").classList.remove("show");
+  }
+
+  window.showLoader = showLoader;
+  window.hideLoader = hideLoader;
+
+  function toast(message,type="info"){
+    const wrap = $("toastWrap");
+
+    const iconMap = {
+      success:"check_circle",
+      error:"error",
+      warning:"warning",
+      info:"info"
+    };
+
+    const item = document.createElement("div");
+    item.className = `toast ${type}`;
+    item.innerHTML = `
+      <span class="material-icons-round">${iconMap[type] || "info"}</span>
+      <span>${escapeHTML(message)}</span>
+    `;
+
+    wrap.innerHTML = "";
+    wrap.appendChild(item);
+
+    setTimeout(()=>{
+      item.remove();
+    },3200);
+  }
+
+  window.toast = toast;
+
+  function openOverlay(id){
+    $(id).classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeOverlay(id){
+    $(id).classList.remove("show");
+
+    if(!document.querySelector(".overlay.show")){
+      document.body.style.overflow = "";
+    }
+  }
+
+  window.closeOverlay = closeOverlay;
+
+  document.querySelectorAll(".overlay").forEach(overlay=>{
+    overlay.addEventListener("click",event=>{
+      if(event.target === overlay){
+        closeOverlay(overlay.id);
+      }
+    });
+  });
+
+  function navigate(page, replace=false){
+    const validPages = [
+      "home",
+      "services",
+      "vehicles",
+      "book",
+      "track",
+      "history",
+      "contact"
+    ];
+
+    if(!validPages.includes(page)){
+      page = "home";
+    }
+
+    const hash = `#${page}`;
+
+    if(location.hash !== hash){
+      if(replace){
+        history.replaceState({page}, "", hash);
+      }else{
+        history.pushState({page}, "", hash);
+      }
+    }
+
+    renderPage(page);
+  }
+
+  window.navigate = navigate;
+
+  function renderPage(page){
+    document.querySelectorAll(".page").forEach(el=>{
+      el.classList.remove("active");
+    });
+
+    const pageEl = $(`page-${page}`);
+
+    if(pageEl){
+      pageEl.classList.add("active");
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(btn=>{
+      btn.classList.toggle("active",btn.dataset.page === page);
+    });
+
+    window.scrollTo({
+      top:0,
+      behavior:"smooth"
+    });
+
+    if(page === "services"){
+      renderServicesPage();
+    }
+
+    if(page === "vehicles"){
+      renderVehiclesPage();
+    }
+
+    if(page === "book"){
+      prepareBookingPage();
+    }
+  }
+
+  function routeFromHash(){
+    let page = location.hash.replace("#","").trim();
+
+    if(![
+      "home",
+      "services",
+      "vehicles",
+      "book",
+      "track",
+      "history",
+      "contact"
+    ].includes(page)){
+      page = "home";
+    }
+
+    renderPage(page);
+  }
+
+  window.addEventListener("popstate",routeFromHash);
+  window.addEventListener("hashchange",routeFromHash);
+
+  function iconForService(service){
+    return service.icon || "home_work";
+  }
+
+  function serviceCardHTML(service){
+    const price = Number(service.startingPrice ?? service.price ?? 0);
+
+    return `
+      <article class="card service-card">
+        <div class="item-top">
+          <div class="item-icon">
+            <span class="material-icons-round">${escapeHTML(iconForService(service))}</span>
+          </div>
+
+          <div class="item-info">
+            <h3>${escapeHTML(service.name)}</h3>
+            <p>${escapeHTML(service.description || "Professional transport service.")}</p>
+          </div>
+        </div>
+
+        ${price > 0 ? `<div class="price">Starting from ${formatMoney(price)}</div>` : ""}
+
+        <button class="btn btn-primary full-btn" onclick="selectServiceAndBook('${escapeHTML(service.id)}')">
+          <span class="material-icons-round">add</span>
+          Book this service
+        </button>
+      </article>
+    `;
+  }
+
+  function vehicleCardHTML(vehicle){
+    const image = vehicle.imageUrl || vehicle.image || "";
+
+    return `
+      <article class="card vehicle-card">
+        <div class="item-top">
+          <div class="item-icon">
+            ${
+              image
+                ? `<img src="${escapeHTML(image)}" alt="${escapeHTML(vehicle.name)}" loading="lazy">`
+                : `<span class="material-icons-round">${escapeHTML(vehicle.icon || "local_shipping")}</span>`
+            }
+          </div>
+
+          <div class="item-info">
+            <h3>${escapeHTML(vehicle.name)}</h3>
+            <p>${escapeHTML(vehicle.description || "Transport vehicle.")}</p>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <span style="font-size:12px;color:#555">
+            <b>Capacity:</b> ${escapeHTML(vehicle.capacity || "As per load")}
+          </span>
+
+          <span class="available">
+            <span class="material-icons-round" style="font-size:13px">check_circle</span>
+            AVAILABLE
+          </span>
+        </div>
+
+        <button class="btn btn-primary full-btn" onclick="selectVehicleAndBook('${escapeHTML(vehicle.id)}')">
+          <span class="material-icons-round">calendar_month</span>
+          Book with this vehicle
+        </button>
+      </article>
+    `;
+  }
+
+  function renderServices(){
+    const active = services.filter(s=>s.active !== false);
+
+    $("homeServices").innerHTML = active.length
+      ? active.slice(0,3).map(serviceCardHTML).join("")
+      : emptyHTML("No services available","Please contact us directly.");
+
+    $("servicesList").innerHTML = active.length
+      ? active.map(serviceCardHTML).join("")
+      : emptyHTML("No services available","Please contact us directly.");
+  }
+
+  function renderVehicles(){
+    const available = vehicles.filter(v=>
+      v.active !== false &&
+      String(v.status || "").toUpperCase() === "AVAILABLE"
+    );
+
+    $("homeVehicles").innerHTML = available.length
+      ? available.slice(0,3).map(vehicleCardHTML).join("")
+      : emptyHTML("No vehicles currently available","Please try again later or contact us.");
+
+    $("vehiclesList").innerHTML = available.length
+      ? available.map(vehicleCardHTML).join("")
+      : emptyHTML("No vehicles currently available","Please try again later or contact us.");
+  }
+
+  function renderServicesPage(){
+    renderServices();
+  }
+
+  function renderVehiclesPage(){
+    renderVehicles();
+  }
+
+  function emptyHTML(title,text){
+    return `
+      <div class="empty">
+        <span class="material-icons-round">inbox</span>
+        <strong>${escapeHTML(title)}</strong>
+        <p>${escapeHTML(text)}</p>
+      </div>
+    `;
+  }
+
+  async function loadServices(){
+    try{
+      if(!db){
+        services = [...FALLBACK_SERVICES];
+        renderServices();
+        return;
+      }
+
+      const snapshot = await getDocs(collection(db,"services"));
+
+      services = snapshot.docs
+        .map(d=>({id:d.id,...d.data()}))
+        .filter(s=>s.active !== false);
+
+      if(!services.length){
+        services = [...FALLBACK_SERVICES];
+      }
+
+    }catch(error){
+      console.error("Services load error:",error);
+      services = [...FALLBACK_SERVICES];
+      toast("Using default services because services could not be loaded.","warning");
+    }
+
+    renderServices();
+  }
+
+  async function loadVehicles(){
+    try{
+      if(!db){
+        vehicles = [...FALLBACK_VEHICLES];
+        renderVehicles();
+        return;
+      }
+
+      const snapshot = await getDocs(collection(db,"vehicles"));
+
+      vehicles = snapshot.docs
+        .map(d=>({id:d.id,...d.data()}))
+        .filter(v=>
+          v.active !== false &&
+          String(v.status || "").toUpperCase() === "AVAILABLE"
+        );
+
+      /*
+       * If the Firestore collection exists but has no currently
+       * available vehicles, we intentionally do NOT invent available
+       * Firestore vehicles. The fallback is used only when Firestore
+       * itself cannot be reached.
+       */
+    }catch(error){
+      console.error("Vehicles load error:",error);
+      vehicles = [...FALLBACK_VEHICLES];
+      toast("Vehicle data could not be loaded. Showing safe default vehicles.","warning");
+    }
+
+    renderVehicles();
+  }
+
+  async function refreshVehiclesFromFirestore(){
+    if(!db){
+      return FALLBACK_VEHICLES.filter(v=>v.active !== false && v.status === "AVAILABLE");
+    }
+
+    const snapshot = await getDocs(collection(db,"vehicles"));
+
+    return snapshot.docs
+      .map(d=>({id:d.id,...d.data()}))
+      .filter(v=>
+        v.active !== false &&
+        String(v.status || "").toUpperCase() === "AVAILABLE"
+      );
+  }
+
+  async function verifyVehicleStillAvailable(vehicleId){
+    if(!vehicleId){
+      return false;
+    }
+
+    if(!db){
+      const fallback = FALLBACK_VEHICLES.find(v=>v.id === vehicleId);
+      return !!fallback && fallback.active !== false && fallback.status === "AVAILABLE";
+    }
+
+    const snap = await getDoc(doc(db,"vehicles",vehicleId));
+
+    if(!snap.exists()){
+      return false;
+    }
+
+    const data = snap.data();
+
+    return data.active !== false &&
+      String(data.status || "").toUpperCase() === "AVAILABLE";
+  }
+
+  function renderItemChoices(){
+    $("itemsGrid").innerHTML = ITEM_OPTIONS.map(([id,label,icon])=>{
+      const selected = selectedItems.includes(id);
+
+      return `
+        <button
+          type="button"
+          class="item-choice ${selected ? "selected" : ""}"
+          onclick="toggleItem('${id}')"
+        >
+          <span class="material-icons-round">${icon}</span>
+          <span>${label}</span>
+        </button>
+      `;
+    }).join("");
+
+    $("otherItemWrap").classList.toggle(
+      "hidden",
+      !selectedItems.includes("other")
+    );
+
+    calculateEstimate();
+  }
+
+  window.toggleItem = function(id){
+    if(selectedItems.includes(id)){
+      selectedItems = selectedItems.filter(x=>x !== id);
+    }else{
+      selectedItems.push(id);
+    }
+
+    renderItemChoices();
+  };
+
+  function prepareBookingPage(){
+    renderItemChoices();
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth()+1).padStart(2,"0");
+    const dd = String(today.getDate()).padStart(2,"0");
+
+    $("movingDate").min = `${yyyy}-${mm}-${dd}`;
+
+    if(!selectedService && services.length){
+      // No automatic service selection.
+    }
+
+    calculateEstimate();
+  }
+
+  function calculateEstimate(){
+    let amount = 0;
+
+    if(selectedService){
+      amount += Number(
+        selectedService.startingPrice ??
+        selectedService.price ??
+        0
+      );
+    }
+
+    if(selectedVehicle){
+      const vehicleText = `${selectedVehicle.name || ""} ${selectedVehicle.capacity || ""}`.toLowerCase();
+
+      if(vehicleText.includes("mini")){
+        amount += 300;
+      }else if(vehicleText.includes("pickup")){
+        amount += 500;
+      }else if(vehicleText.includes("auto")){
+        amount += 150;
+      }
+    }
+
+    amount += Math.max(0,selectedItems.length - 3) * 100;
+
+    $("estimateValue").textContent = formatMoney(amount);
+  }
+
+  function selectService(service){
+    selectedService = service;
+
+    $("selectedServiceName").textContent = service.name;
+    $("selectedServiceDescription").textContent =
+      service.description || "Selected service";
+
+    $("selectedServiceIcon").textContent =
+      service.icon || "home_work";
+
+    calculateEstimate();
+  }
+
+  function selectVehicle(vehicle){
+    selectedVehicle = vehicle;
+
+    $("selectedVehicleName").textContent = vehicle.name;
+    $("selectedVehicleDescription").textContent =
+      `${vehicle.capacity || "Capacity as per load"} • AVAILABLE`;
+
+    calculateEstimate();
+  }
+
+  window.selectServiceAndBook = function(serviceId){
+    const service = services.find(s=>s.id === serviceId);
+
+    if(!service){
+      toast("This service is no longer available.","error");
+      return;
+    }
+
+    selectService(service);
+    navigate("book");
+    toast("Service selected.","success");
+  };
+
+  window.selectVehicleAndBook = function(vehicleId){
+    const vehicle = vehicles.find(v=>v.id === vehicleId);
+
+    if(!vehicle){
+      toast("This vehicle is no longer available.","error");
+      return;
+    }
+
+    selectVehicle(vehicle);
+    navigate("book");
+    toast("Vehicle selected.","success");
+  };
+
+  function openServiceSelector(){
+    const active = services.filter(s=>s.active !== false);
+
+    if(!active.length){
+      toast("No services are currently available.","error");
+      return;
+    }
+
+    $("serviceOptions").innerHTML = active.map(service=>{
+      const selected = selectedService?.id === service.id;
+
+      return `
+        <button type="button" class="select-option ${selected ? "selected" : ""}" onclick="chooseService('${escapeHTML(service.id)}')">
+          <div class="option-icon">
+            <span class="material-icons-round">${escapeHTML(service.icon || "home_work")}</span>
+          </div>
+
+          <div class="option-info">
+            <strong>${escapeHTML(service.name)}</strong>
+            <small>
+              ${escapeHTML(service.description || "")}
+              ${Number(service.startingPrice || 0) > 0 ? ` • From ${formatMoney(service.startingPrice)}` : ""}
+            </small>
+          </div>
+
+          <div class="check">
+            ${selected ? `<span class="material-icons-round" style="font-size:16px">check</span>` : ""}
+          </div>
+        </button>
+      `;
+    }).join("");
+
+    openOverlay("serviceOverlay");
+  }
+
+  window.openServiceSelector = openServiceSelector;
+
+  window.chooseService = function(serviceId){
+    const service = services.find(s=>s.id === serviceId);
+
+    if(!service){
+      toast("Service not found.","error");
+      return;
+    }
+
+    selectService(service);
+    closeOverlay("serviceOverlay");
+    toast("Service selected.","success");
+  };
+
+  async function openVehicleSelector(){
+    showLoader("Checking available vehicles...");
+
+    try{
+      const latestVehicles = await refreshVehiclesFromFirestore();
+
+      vehicles = latestVehicles;
+      renderVehicles();
+
+      if(!latestVehicles.length){
+        toast("No vehicles are currently available.","warning");
+        hideLoader();
+        return;
+      }
+
+      $("vehicleOptions").innerHTML = latestVehicles.map(vehicle=>{
+        const selected = selectedVehicle?.id === vehicle.id;
+
+        return `
+          <button type="button" class="select-option ${selected ? "selected" : ""}" onclick="chooseVehicle('${escapeHTML(vehicle.id)}')">
+            <div class="option-icon">
+              <span class="material-icons-round">${escapeHTML(vehicle.icon || "local_shipping")}</span>
+            </div>
+
+            <div class="option-info">
+              <strong>${escapeHTML(vehicle.name)}</strong>
+              <small>
+                ${escapeHTML(vehicle.capacity || "Capacity as per load")}
+                • AVAILABLE
+                ${vehicle.description ? ` • ${escapeHTML(vehicle.description)}` : ""}
+              </small>
+            </div>
+
+            <div class="check">
+              ${selected ? `<span class="material-icons-round" style="font-size:16px">check</span>` : ""}
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      hideLoader();
+      openOverlay("vehicleOverlay");
+
+    }catch(error){
+      console.error(error);
+      hideLoader();
+
+      /*
+       * Safe fallback only when the Firestore read fails.
+       */
+      const fallback = FALLBACK_VEHICLES.filter(v=>
+        v.active !== false &&
+        v.status === "AVAILABLE"
+      );
+
+      vehicles = fallback;
+
+      if(!fallback.length){
+        toast("Unable to load available vehicles.","error");
+        return;
+      }
+
+      $("vehicleOptions").innerHTML = fallback.map(vehicle=>{
+        return `
+          <button type="button" class="select-option" onclick="chooseVehicle('${escapeHTML(vehicle.id)}')">
+            <div class="option-icon">
+              <span class="material-icons-round">${escapeHTML(vehicle.icon || "local_shipping")}</span>
+            </div>
+
+            <div class="option-info">
+              <strong>${escapeHTML(vehicle.name)}</strong>
+              <small>${escapeHTML(vehicle.capacity || "")} • AVAILABLE</small>
+            </div>
+
+            <div class="check"></div>
+          </button>
+        `;
+      }).join("");
+
+      openOverlay("vehicleOverlay");
+      toast("Live vehicle data unavailable. Showing safe defaults.","warning");
+    }
+  }
+
+  window.openVehicleSelector = openVehicleSelector;
+
+  window.chooseVehicle = async function(vehicleId){
+    const vehicle = vehicles.find(v=>v.id === vehicleId);
+
+    if(!vehicle){
+      toast("Vehicle not found.","error");
+      return;
+    }
+
+    closeOverlay("vehicleOverlay");
+    showLoader("Verifying vehicle availability...");
+
+    try{
+      const available = await verifyVehicleStillAvailable(vehicleId);
+
+      if(!available){
+        selectedVehicle = null;
+        hideLoader();
+
+        toast("Vehicle is no longer available. Refreshing vehicles.","error");
+
+        await loadVehicles();
+        return;
+      }
+
+      selectVehicle(vehicle);
+      hideLoader();
+      toast("Vehicle selected.","success");
+
+    }catch(error){
+      console.error(error);
+      hideLoader();
+      toast("Could not verify vehicle availability. Please try again.","error");
+    }
+  };
+
+  function openMapPicker(target){
+    mapTarget = target;
+
+    $("mapTitle").textContent =
+      target === "pickup"
+        ? "Select Pickup Location"
+        : "Select Drop Location";
+
+    $("mapSearchInput").value = "";
+
+    mapSelected =
+      target === "pickup"
+        ? pickupLocation
+        : deliveryLocation;
+
+    openOverlay("mapOverlay");
+
+    setTimeout(()=>{
+      initializeMap();
+
+      if(mapSelected){
+        setMapPosition(
+          mapSelected.lat,
+          mapSelected.lng,
+          mapSelected.address
+        );
+      }else{
+        const center = [13.612,77.517];
+
+        map.setView(center,13);
+
+        updateMapSelectedText(
+          "Search for a place, move the map, or use current location."
+        );
+      }
+
+      map.invalidateSize();
+    },120);
+  }
+
+  window.openMapPicker = openMapPicker;
+
+  function initializeMap(){
+    if(map){
+      map.invalidateSize();
+      return;
+    }
+
+    map = L.map("map",{
+      zoomControl:true,
+      attributionControl:true
+    }).setView([13.612,77.517],13);
+
+    L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        maxZoom:19,
+        attribution:"© OpenStreetMap contributors"
+      }
+    ).addTo(map);
+
+    map.on("click",async event=>{
+      await selectMapCoordinates(
+        event.latlng.lat,
+        event.latlng.lng
+      );
+    });
+
+    map.on("moveend",async()=>{
+      if(!map) return;
+
+      const center = map.getCenter();
+
+      /*
+       * Reverse geocoding on move is intentionally avoided.
+       * This prevents excessive requests to Nominatim.
+       */
+    });
+  }
+
+  function setMapPosition(lat,lng,address=""){
+    const safeLat = Number(lat);
+    const safeLng = Number(lng);
+
+    if(!Number.isFinite(safeLat) || !Number.isFinite(safeLng)){
+      return;
+    }
+
+    map.setView([safeLat,safeLng],16);
+
+    if(mapMarker){
+      mapMarker.setLatLng([safeLat,safeLng]);
+    }else{
+      mapMarker = L.marker([safeLat,safeLng],{
+        draggable:true
+      }).addTo(map);
+
+      mapMarker.on("dragend",async()=>{
+        const position = mapMarker.getLatLng();
+
+        await selectMapCoordinates(
+          position.lat,
+          position.lng
+        );
+      });
+    }
+
+    mapSelected = {
+      lat:safeLat,
+      lng:safeLng,
+      address:address || ""
+    };
+
+    updateMapSelectedText(
+      address ||
+      `${safeLat.toFixed(6)}, ${safeLng.toFixed(6)}`
+    );
+  }
+
+  async function selectMapCoordinates(lat,lng){
+    showLoader("Finding address...");
+
+    try{
+      const address = await reverseGeocode(lat,lng);
+
+      setMapPosition(lat,lng,address);
+
+      toast("Location selected.","success");
+
+    }catch(error){
+      console.error(error);
+
+      setMapPosition(
+        lat,
+        lng,
+        `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`
+      );
+
+      toast(
+        "Coordinates selected, but address could not be found.",
+        "warning"
+      );
+
+    }finally{
+      hideLoader();
+    }
+  }
+
+  async function reverseGeocode(lat,lng){
+    const url =
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=18&addressdetails=1`;
+
+    const response = await fetch(url,{
+      headers:{
+        "Accept":"application/json"
+      }
+    });
+
+    if(!response.ok){
+      throw new Error("Reverse geocoding failed");
+    }
+
+    const data = await response.json();
+
+    return data.display_name ||
+      `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+  }
+
+  async function searchMapLocation(){
+    const queryText = $("mapSearchInput").value.trim();
+
+    if(queryText.length < 3){
+      toast("Enter at least 3 characters to search.","warning");
+      return;
+    }
+
+    showLoader("Searching location...");
+
+    try{
+      const url =
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=in&q=${encodeURIComponent(queryText)}`;
+
+      const response = await fetch(url,{
+        headers:{
+          "Accept":"application/json"
+        }
+      });
+
+      if(!response.ok){
+        throw new Error("Search failed");
+      }
+
+      const results = await response.json();
+
+      if(!results.length){
+        toast("Location not found. Try another search.","warning");
+        return;
+      }
+
+      const result = results[0];
+
+      setMapPosition(
+        Number(result.lat),
+        Number(result.lon),
+        result.display_name
+      );
+
+    }catch(error){
+      console.error(error);
+      toast("Location search failed. Check your internet connection.","error");
+    }finally{
+      hideLoader();
+    }
+  }
+
+  window.searchMapLocation = searchMapLocation;
+
+  function updateMapSelectedText(text){
+    $("mapSelectedText").textContent = text;
+  }
+
+  async function useCurrentLocation(target){
+    if(!navigator.geolocation){
+      toast("GPS is not supported on this device.","error");
+      return;
+    }
+
+    showLoader("Finding your location...");
+
+    navigator.geolocation.getCurrentPosition(
+      async position=>{
+        try{
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          if(mapTarget !== target){
+            mapTarget = target;
+            $("mapTitle").textContent =
+              target === "pickup"
+                ? "Select Pickup Location"
+                : "Select Drop Location";
+          }
+
+          if(!map){
+            initializeMap();
+          }
+
+          const address = await reverseGeocode(lat,lng);
+
+          if(!map){
+            return;
+          }
+
+          setMapPosition(lat,lng,address);
+          map.invalidateSize();
+
+          if(!$("mapOverlay").classList.contains("show")){
+            openOverlay("mapOverlay");
+          }
+
+          toast("Current location found.","success");
+
+        }catch(error){
+          console.error(error);
+          toast(
+            "GPS coordinates were found, but the address could not be loaded.",
+            "warning"
+          );
+        }finally{
+          hideLoader();
+        }
+      },
+      error=>{
+        hideLoader();
+
+        let message = "Unable to get your current location.";
+
+        if(error.code === 1){
+          message = "Location permission was denied. Allow location permission and try again.";
+        }else if(error.code === 2){
+          message = "Your location is currently unavailable.";
+        }else if(error.code === 3){
+          message = "Location request timed out. Please try again.";
+        }
+
+        toast(message,"error");
+      },
+      {
+        enableHighAccuracy:true,
+        timeout:15000,
+        maximumAge:0
+      }
+    );
+  }
+
+  window.useCurrentLocation = useCurrentLocation;
+
+  function confirmMapLocation(){
+    if(!mapSelected){
+      toast("Please select a location first.","warning");
+      return;
+    }
+
+    const location = {
+      lat:Number(mapSelected.lat),
+      lng:Number(mapSelected.lng),
+      address:String(mapSelected.address || "")
+    };
+
+    if(
+      !Number.isFinite(location.lat) ||
+      !Number.isFinite(location.lng)
+    ){
+      toast("Invalid map coordinates.","error");
+      return;
+    }
+
+    if(mapTarget === "pickup"){
+      pickupLocation = location;
+
+      $("pickupAddressInput").value = location.address;
+      $("pickupSelectedAddress").textContent = location.address;
+      $("pickupSelectedAddress").classList.add("selected");
+
+    }else if(mapTarget === "delivery"){
+      deliveryLocation = location;
+
+      $("deliveryAddressInput").value = location.address;
+      $("deliverySelectedAddress").textContent = location.address;
+      $("deliverySelectedAddress").classList.add("selected");
+    }
+
+    closeMapPicker();
+    toast("Location selected successfully.","success");
+  }
+
+  window.confirmMapLocation = confirmMapLocation;
+
+  function closeMapPicker(){
+    closeOverlay("mapOverlay");
+
+    mapTarget = null;
+    mapSelected = null;
+  }
+
+  window.closeMapPicker = closeMapPicker;
+
+  function validateBookingForm(){
+    const name = $("customerName").value.trim();
+    const phone = normalizePhone($("customerPhone").value);
+    const pickupAddress = $("pickupAddressInput").value.trim();
+    const deliveryAddress = $("deliveryAddressInput").value.trim();
+    const movingDate = $("movingDate").value;
+    const movingTime = $("movingTime").value;
+    const otherItem = $("otherItem").value.trim();
+
+    if(name.length < 2){
+      toast("Please enter a valid customer name.","error");
+      $("customerName").focus();
+      return null;
+    }
+
+    if(!validIndianMobile(phone)){
+      toast("Please enter a valid 10-digit Indian mobile number.","error");
+      $("customerPhone").focus();
+      return null;
+    }
+
+    if(!pickupAddress){
+      toast("Please enter your pickup address.","error");
+      $("pickupAddressInput").focus();
+      return null;
+    }
+
+    if(!deliveryAddress){
+      toast("Please enter your destination address.","error");
+      $("deliveryAddressInput").focus();
+      return null;
+    }
+
+    if(!movingDate){
+      toast("Please select a moving date.","error");
+      $("movingDate").focus();
+      return null;
+    }
+
+    const selectedDate = new Date(`${movingDate}T00:00:00`);
+    const today = new Date();
+
+    today.setHours(0,0,0,0);
+
+    if(selectedDate < today){
+      toast("Moving date cannot be in the past.","error");
+      $("movingDate").focus();
+      return null;
+    }
+
+    if(!movingTime){
+      toast("Please select a moving time.","error");
+      $("movingTime").focus();
+      return null;
+    }
+
+    if(!selectedService){
+      toast("Please select a service.","error");
+      openServiceSelector();
+      return null;
+    }
+
+    if(!selectedVehicle){
+      toast("Please select an available vehicle.","error");
+      openVehicleSelector();
+      return null;
+    }
+
+    if(!selectedItems.length){
+      toast("Please select at least one item.","error");
+      return null;
+    }
+
+    if(selectedItems.includes("other") && !otherItem){
+      toast("Please specify the other item.","error");
+      $("otherItem").focus();
+      return null;
+    }
+
+    return {
+      name,
+      phone,
+      pickupAddress,
+      deliveryAddress,
+      movingDate,
+      movingTime,
+      otherItem
+    };
+  }
+
+  function getSelectedItemLabels(){
+    return selectedItems.map(id=>{
+      const item = ITEM_OPTIONS.find(x=>x[0] === id);
+
+      if(!item) return id;
+
+      if(id === "other"){
+        const other = $("otherItem").value.trim();
+        return other ? `Other: ${other}` : "Other";
+      }
+
+      return item[1];
+    });
+  }
+
+  function estimatedPrice(){
+    const text = $("estimateValue").textContent.replace(/[₹,]/g,"").trim();
+    const amount = Number(text);
+    return Number.isFinite(amount) ? amount : 0;
+  }
+
+  function showBookingConfirmation(){
+    const data = validateBookingForm();
+
+    if(!data){
+      return;
+    }
+
+    const pickupText =
+      pickupLocation?.address ||
+      data.pickupAddress;
+
+    const deliveryText =
+      deliveryLocation?.address ||
+      data.deliveryAddress;
+
+    const itemsText = getSelectedItemLabels().join(", ");
+
+    $("confirmContent").innerHTML = `
+      <div class="confirm-row">
+        <span>Customer</span>
+        <span>${escapeHTML(data.name)}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Mobile</span>
+        <span>${escapeHTML(data.phone)}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Pickup</span>
+        <span>${escapeHTML(pickupText)}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Destination</span>
+        <span>${escapeHTML(deliveryText)}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Date</span>
+        <span>${escapeHTML(data.movingDate)}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Time</span>
+        <span>${escapeHTML(data.movingTime)}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Service</span>
+        <span>${escapeHTML(selectedService.name)}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Vehicle</span>
+        <span>${escapeHTML(selectedVehicle.name)}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Items</span>
+        <span>${escapeHTML(itemsText)}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Estimated</span>
+        <span>${formatMoney(estimatedPrice())}</span>
+      </div>
+
+      <div class="confirm-row">
+        <span>Payment</span>
+        <span>CASH ONLY</span>
+      </div>
+    `;
+
+    openOverlay("confirmOverlay");
+  }
+
+  window.showBookingConfirmation = showBookingConfirmation;
+
+  async function generateBookingId(transaction){
+    if(!db){
+      const date = getDateYYYYMMDD();
+
+      return `HS-${date}-${String(
+        Math.floor(Math.random()*999999)+1
+      ).padStart(3,"0")}`;
+    }
+
+    const today = getDateYYYYMMDD();
+    const counterRef = doc(db,"settings","counters");
+
+    const bookingId = await runTransaction(db,async transaction=>{
+      const snap = await transaction.get(counterRef);
+
+      const data = snap.exists()
+        ? snap.data()
+        : {};
+
+      const current =
+        Number(data.bookingSequence || data.bookingCounter || 0);
+
+      const next = current + 1;
+
+      transaction.set(
+        counterRef,
+        {
+          bookingSequence:next,
+          bookingCounter:next,
+          updatedAt:serverTimestamp()
+        },
+        {merge:true}
+      );
+
+      return `HS-${today}-${String(next).padStart(3,"0")}`;
+    });
+
+    return bookingId;
+  }
+
+  function getDateYYYYMMDD(){
+    const date = new Date();
+
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,"0");
+    const d = String(date.getDate()).padStart(2,"0");
+
+    return `${y}${m}${d}`;
+  }
+
+  async function generateUniqueFallbackBookingId(){
+    const date = getDateYYYYMMDD();
+
+    for(let i=0;i<10;i++){
+      const random = String(
+        Math.floor(Math.random()*999999)+1
+      ).padStart(3,"0");
+
+      const id = `HS-${date}-${random}`;
+
+      if(!db){
+        return id;
+      }
+
+      try{
+        const snap = await getDoc(doc(db,"bookings",id));
+
+        if(!snap.exists()){
+          return id;
+        }
+      }catch(error){
+        return id;
+      }
+    }
+
+    return `HS-${date}-${Date.now().toString().slice(-6)}`;
+  }
+
+  async function createBooking(){
+    const data = validateBookingForm();
+
+    if(!data){
+      closeOverlay("confirmOverlay");
+      return;
+    }
+
+    const button = $("confirmBookingBtn");
+
+    if(button.disabled){
+      return;
+    }
+
+    button.disabled = true;
+
+    showLoader("Creating booking...");
+
+    try{
+      /*
+       * Important final availability check directly against Firestore.
+       */
+      const vehicleAvailable =
+        await verifyVehicleStillAvailable(selectedVehicle.id);
+
+      if(!vehicleAvailable){
+        hideLoader();
+        button.disabled = false;
+        closeOverlay("confirmOverlay");
+
+        selectedVehicle = null;
+        $("selectedVehicleName").textContent = "Choose a vehicle";
+        $("selectedVehicleDescription").textContent =
+          "Only currently available vehicles can be selected";
+
+        await loadVehicles();
+
+        toast(
+          "Vehicle is no longer available. Please choose another vehicle.",
+          "error"
+        );
+
+        return;
+      }
+
+      const bookingId = await generateBookingId();
+
+      const estimated = estimatedPrice();
+
+      const pickup = pickupLocation
+        ? {
+            lat:Number(pickupLocation.lat),
+            lng:Number(pickupLocation.lng),
+            address:String(pickupLocation.address || data.pickupAddress)
+          }
+        : null;
+
+      const delivery = deliveryLocation
+        ? {
+            lat:Number(deliveryLocation.lat),
+            lng:Number(deliveryLocation.lng),
+            address:String(deliveryLocation.address || data.deliveryAddress)
+          }
+        : null;
+
+      const nowISO = new Date().toISOString();
+
+      const booking = {
+        bookingId,
+
+        customerName:data.name,
+        customerPhone:data.phone,
+
+        serviceId:selectedService.id,
+        serviceName:selectedService.name,
+
+        pickupAddress:data.pickupAddress,
+        deliveryAddress:data.deliveryAddress,
+
+        pickupLocation:pickup,
+        deliveryLocation:delivery,
+
+        movingDate:data.movingDate,
+        movingTime:data.movingTime,
+
+        items:getSelectedItemLabels(),
+        otherItem:data.otherItem || "",
+
+        vehicleId:selectedVehicle.id,
+        vehicleName:selectedVehicle.name,
+
+        estimatedPrice:estimated,
+        finalPrice:null,
+
+        paymentMethod:"CASH",
+        paymentStatus:"PENDING",
+
+        bookingStatus:"PENDING",
+
+        createdAt:serverTimestamp(),
+        updatedAt:serverTimestamp(),
+        statusUpdatedAt:serverTimestamp(),
+
+        statusHistory:[
+          {
+            status:"PENDING",
+            at:nowISO
+          }
+        ]
+      };
+
+      if(db){
+        /*
+         * Booking document ID is the booking ID.
+         * This keeps the booking ID directly addressable and prevents
+         * accidental duplicate document IDs.
+         */
+        const bookingRef = doc(db,"bookings",bookingId);
+
+        await runTransaction(db,async transaction=>{
+          const existing = await transaction.get(bookingRef);
+
+          if(existing.exists()){
+            throw new Error("BOOKING_ID_EXISTS");
+          }
+
+          transaction.set(bookingRef,booking);
+        });
+
+        /*
+         * Payment record required by the Admin Side.
+         */
+        const paymentRef = doc(
+          db,
+          "payments",
+          `PAY-${bookingId}`
+        );
+
+        await setDoc(paymentRef,{
+          bookingId,
+          paymentMethod:"CASH",
+          paymentStatus:"PENDING",
+          amount:estimated,
+          createdAt:serverTimestamp(),
+          updatedAt:serverTimestamp()
+        });
+      }else{
+        /*
+         * Firebase is required for production persistence.
+         * This branch exists only to avoid a broken page if Firebase
+         * cannot initialize; it does not pretend the booking was saved.
+         */
+        throw new Error(
+          "Firebase is unavailable. Booking was not saved."
+        );
+      }
+
+      lastCreatedBooking = booking;
+
+      hideLoader();
+      closeOverlay("confirmOverlay");
+      $("successBookingId").textContent = bookingId;
+
+      $("successSummary").innerHTML = `
+        <div class="confirm-row">
+          <span>Customer</span>
+          <span>${escapeHTML(data.name)}</span>
+        </div>
+
+        <div class="confirm-row">
+          <span>Service</span>
+          <span>${escapeHTML(selectedService.name)}</span>
+        </div>
+
+        <div class="confirm-row">
+          <span>Moving Date</span>
+          <span>${escapeHTML(data.movingDate)}</span>
+        </div>
+
+        <div class="confirm-row">
+          <span>Vehicle</span>
+          <span>${escapeHTML(selectedVehicle.name)}</span>
+        </div>
+
+        <div class="confirm-row">
+          <span>Estimated Price</span>
+          <span>${formatMoney(estimated)}</span>
+        </div>
+
+        <div class="confirm-row">
+          <span>Payment</span>
+          <span>CASH ONLY</span>
+        </div>
+      `;
+
+      openOverlay("successOverlay");
+
+      toast("Booking created successfully.","success");
+
+      $("trackBookingId").value = bookingId;
+      $("trackPhone").value = data.phone;
+
+    }catch(error){
+      console.error("Booking creation error:",error);
+
+      hideLoader();
+      button.disabled = false;
+
+      if(error.message === "BOOKING_ID_EXISTS"){
+        toast(
+          "A booking ID conflict occurred. Please try again.",
+          "error"
+        );
+      }else if(
+        error.code === "permission-denied" ||
+        String(error.message).toLowerCase().includes("permission")
+      ){
+        toast(
+          "Firestore permission denied. Please check your Firestore rules.",
+          "error"
+        );
+      }else if(
+        String(error.message).toLowerCase().includes("network")
+      ){
+        toast(
+          "Network error. Please check your internet connection.",
+          "error"
+        );
+      }else{
+        toast(
+          error.message ||
+          "Booking could not be created. Please try again.",
+          "error"
+        );
+      }
+    }
+  }
+
+  window.createBooking = createBooking;
+
+  function copyText(text){
+    if(navigator.clipboard && window.isSecureContext){
+      return navigator.clipboard.writeText(text);
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    document.execCommand("copy");
+    textarea.remove();
+
+    return Promise.resolve();
+  }
+
+  function copySuccessBookingId(){
+    const id = $("successBookingId").textContent.trim();
+
+    copyText(id)
+      .then(()=>toast("Booking ID copied.","success"))
+      .catch(()=>toast("Could not copy Booking ID.","error"));
+  }
+
+  window.copySuccessBookingId = copySuccessBookingId;
+
+  function closeSuccessAndTrack(){
+    closeOverlay("successOverlay");
+
+    navigate("track");
+
+    setTimeout(()=>{
+      trackBooking();
+    },150);
+  }
+
+  window.closeSuccessAndTrack = closeSuccessAndTrack;
+
+  function openWhatsApp(message){
+    const defaultMessage =
+      message ||
+      "Hello Gireesh House Swift, I need help with a booking.";
+
+    const url =
+      `https://wa.me/919741651293?text=${encodeURIComponent(defaultMessage)}`;
+
+    window.open(url,"_blank","noopener,noreferrer");
+  }
+
+  window.openWhatsApp = openWhatsApp;
+
+  function openSuccessWhatsApp(){
+    if(!lastCreatedBooking){
+      openWhatsApp();
+      return;
+    }
+
+    openWhatsApp(
+      `Hello Gireesh House Swift, my booking ID is ${lastCreatedBooking.bookingId}. I need help with this booking.`
+    );
+  }
+
+  window.openSuccessWhatsApp = openSuccessWhatsApp;
+
+  function openInstagram(){
+    window.open(
+      "https://www.instagram.com/girishgiri9762/",
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
+  window.openInstagram = openInstagram;
+
+  function openBusinessMaps(){
+    const query = business.mapsQuery || business.serviceArea;
+
+    window.open(
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
+  window.openBusinessMaps = openBusinessMaps;
+
+  function openCoordinateMaps(location){
+    if(!location) return;
+
+    const lat = Number(location.lat);
+    const lng = Number(location.lng);
+
+    if(Number.isFinite(lat) && Number.isFinite(lng)){
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+      return;
+    }
+
+    if(location.address){
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
+  }
+
+  window.openCoordinateMaps = openCoordinateMaps;
+
+  async function findBooking(bookingId,phone){
+    if(!db){
+      throw new Error("Firestore is unavailable.");
+    }
+
+    const cleanId = bookingId.trim();
+    const cleanPhone = normalizePhone(phone);
+
+    if(!cleanId || !validIndianMobile(cleanPhone)){
+      throw new Error("INVALID_INPUT");
+    }
+
+    /*
+     * Query uses BOTH bookingId and customerPhone.
+     * This ensures the UI never displays a booking unless both
+     * customer-supplied values match.
+     */
+    const q = query(
+      collection(db,"bookings"),
+      where("bookingId","==",cleanId),
+      where("customerPhone","==",cleanPhone),
+      limit(1)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if(snapshot.empty){
+      return null;
+    }
+
+    const d = snapshot.docs[0];
+
+    return {
+      id:d.id,
+      ...d.data()
+    };
+  }
+
+  async function trackBooking(){
+    const bookingId = $("trackBookingId").value.trim();
+    const phone = normalizePhone($("trackPhone").value);
+
+    if(!bookingId){
+      toast("Please enter your Booking ID.","error");
+      $("trackBookingId").focus();
+      return;
+    }
+
+    if(!validIndianMobile(phone)){
+      toast("Please enter a valid 10-digit mobile number.","error");
+      $("trackPhone").focus();
+      return;
+    }
+
+    const button = $("trackBtn");
+
+    if(button.disabled){
+      return;
+    }
+
+    button.disabled = true;
+    showLoader("Loading booking...");
+
+    try{
+      const booking = await findBooking(bookingId,phone);
+
+      if(!booking){
+        $("trackResult").innerHTML = emptyHTML(
+          "Booking not found",
+          "Booking ID and mobile number did not match any booking."
+        );
+
+        toast("Booking not found or details do not match.","error");
+        return;
+      }
+
+      lastTrackedBooking = booking;
+
+      $("trackResult").innerHTML = bookingDetailsHTML(
+        booking,
+        true
+      );
+
+      toast("Booking loaded successfully.","success");
+
+    }catch(error){
+      console.error(error);
+
+      if(error.message === "INVALID_INPUT"){
+        toast("Please check your Booking ID and mobile number.","error");
+      }else{
+        toast(
+          "Unable to load booking. Please check your internet connection.",
+          "error"
+        );
+      }
+
+      $("trackResult").innerHTML = emptyHTML(
+        "Unable to load booking",
+        "Please try again."
+      );
+
+    }finally{
+      hideLoader();
+      button.disabled = false;
+    }
+  }
+
+  window.trackBooking = trackBooking;
+
+  function statusLabel(status){
+    const labels = {
+      PENDING:"Pending",
+      CONFIRMED:"Confirmed",
+      VEHICLE_ASSIGNED:"Vehicle Assigned",
+      IN_TRANSIT:"In Transit",
+      DELIVERED:"Delivered",
+      COMPLETED:"Completed",
+      CANCELLED:"Cancelled"
+    };
+
+    return labels[status] || String(status || "").replaceAll("_"," ");
+  }
+
+  function statusClass(status){
+    if(status === "COMPLETED" || status === "DELIVERED"){
+      return "success";
+    }
+
+    if(status === "CANCELLED"){
+      return "danger";
+    }
+
+    return "";
+  }
+
+  function formatDateTimeValue(value){
+    if(!value) return "";
+
+    try{
+      if(typeof value === "object" && value.toDate){
+        return value.toDate().toLocaleString("en-IN");
+      }
+
+      const date = new Date(value);
+
+      if(!Number.isNaN(date.getTime())){
+        return date.toLocaleString("en-IN");
+      }
+    }catch{}
+
+    return String(value);
+  }
+
+  function normalizeStatusHistory(booking){
+    const history = Array.isArray(booking.statusHistory)
+      ? booking.statusHistory
+      : [];
+
+    return history
+      .filter(item=>item && item.status)
+      .map(item=>({
+        status:String(item.status).toUpperCase(),
+        at:item.at || null
+      }));
+  }
+
+  function timelineHTML(booking){
+    const history = normalizeStatusHistory(booking);
+
+    const existingStatuses = new Set(
+      history.map(item=>item.status)
+    );
+
+    if(existingStatuses.has("CANCELLED")){
+      const cancel = history.find(
+        x=>x.status === "CANCELLED"
+      );
+
+      return `
+        <div class="timeline">
+          <div class="timeline-item cancelled done">
+            <div class="timeline-dot">
+              <span class="material-icons-round" style="font-size:17px">close</span>
+            </div>
+
+            <div class="timeline-content">
+              <strong>Cancelled</strong>
+              <span>${escapeHTML(formatDateTimeValue(cancel?.at || ""))}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    const currentStatus =
+      String(
+        booking.bookingStatus ||
+        history[history.length-1]?.status ||
+        "PENDING"
+      ).toUpperCase();
+
+    let currentIndex = STATUS_ORDER.indexOf(currentStatus);
+
+    if(currentIndex < 0){
+      currentIndex = 0;
+    }
+
+    return `
+      <div class="timeline">
+        ${STATUS_ORDER.map((status,index)=>{
+          const actuallyExists = existingStatuses.has(status);
+          const done = actuallyExists;
+          const current =
+            status === currentStatus &&
+            !actuallyExists;
+
+          const item = history.find(x=>x.status === status);
+
+          return `
+            <div class="timeline-item ${done ? "done" : ""} ${current ? "current" : ""}">
+              <div class="timeline-dot">
+                ${
+                  done
+                    ? `<span class="material-icons-round" style="font-size:17px">check</span>`
+                    : index === currentIndex
+                      ? `<span class="material-icons-round" style="font-size:17px">radio_button_checked</span>`
+                      : `<span style="width:7px;height:7px;background:#aaa;border-radius:50%"></span>`
+                }
+              </div>
+
+              <div class="timeline-content">
+                <strong>${escapeHTML(statusLabel(status))}</strong>
+                ${
+                  item?.at
+                    ? `<span>${escapeHTML(formatDateTimeValue(item.at))}</span>`
+                    : current
+                      ? `<span>Current status</span>`
+                      : ""
+                }
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  function bookingDetailsHTML(booking,showTracking=false){
+    const status =
+      String(booking.bookingStatus || "PENDING").toUpperCase();
+
+    const paymentStatus =
+      String(booking.paymentStatus || "PENDING").toUpperCase();
+
+    const finalPrice =
+      booking.finalPrice !== null &&
+      booking.finalPrice !== undefined &&
+      booking.finalPrice !== ""
+        ? formatMoney(booking.finalPrice)
+        : "Not confirmed";
+
+    const estimated =
+      formatMoney(
+        booking.estimatedPrice || 0
+      );
+
+    const items =
+      Array.isArray(booking.items)
+        ? booking.items.join(", ")
+        : String(booking.items || "Not specified");
+
+    return `
+      <div class="card" style="box-shadow:none;padding:0;border:0">
+
+        <div class="booking-header">
+          <div>
+            <div class="booking-id">${escapeHTML(booking.bookingId)}</div>
+            <div class="booking-meta">
+              ${escapeHTML(booking.serviceName || "Service")}
+            </div>
+          </div>
+
+          <span class="status-chip ${statusClass(status)}">
+            ${escapeHTML(statusLabel(status))}
+          </span>
+        </div>
+
+        <div class="info-list">
+
+          <div class="info-row">
+            <span class="material-icons-round">person</span>
+            <div>
+              <strong>Customer</strong>
+              <span>${escapeHTML(booking.customerName)}</span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">phone</span>
+            <div>
+              <strong>Mobile</strong>
+              <span>${escapeHTML(booking.customerPhone)}</span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">my_location</span>
+            <div>
+              <strong>Pickup</strong>
+              <span>${escapeHTML(booking.pickupAddress || booking.pickupLocation?.address || "")}</span>
+
+              ${
+                booking.pickupLocation
+                  ? `
+                    <div class="map-links">
+                      <button class="btn btn-outline btn-small" onclick='openCoordinateMaps(${safeJSON(booking.pickupLocation)})'>
+                        <span class="material-icons-round">map</span>
+                        Open Pickup in Maps
+                      </button>
+                    </div>
+                  `
+                  : ""
+              }
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">location_on</span>
+            <div>
+              <strong>Destination</strong>
+              <span>${escapeHTML(booking.deliveryAddress || booking.deliveryLocation?.address || "")}</span>
+
+              ${
+                booking.deliveryLocation
+                  ? `
+                    <div class="map-links">
+                      <button class="btn btn-outline btn-small" onclick='openCoordinateMaps(${safeJSON(booking.deliveryLocation)})'>
+                        <span class="material-icons-round">map</span>
+                        Open Destination in Maps
+                      </button>
+                    </div>
+                  `
+                  : ""
+              }
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">event</span>
+            <div>
+              <strong>Moving Date & Time</strong>
+              <span>
+                ${escapeHTML(booking.movingDate || "")}
+                ${booking.movingTime ? ` • ${escapeHTML(booking.movingTime)}` : ""}
+              </span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">category</span>
+            <div>
+              <strong>Service</strong>
+              <span>${escapeHTML(booking.serviceName || "")}</span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">local_shipping</span>
+            <div>
+              <strong>Vehicle</strong>
+              <span>${escapeHTML(booking.vehicleName || "Not assigned")}</span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">inventory_2</span>
+            <div>
+              <strong>Items</strong>
+              <span>${escapeHTML(items)}</span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">receipt_long</span>
+            <div>
+              <strong>Estimated Price</strong>
+              <span>${estimated}</span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">price_check</span>
+            <div>
+              <strong>Final Price</strong>
+              <span>${finalPrice}</span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="material-icons-round">payments</span>
+            <div>
+              <strong>Payment</strong>
+              <span>CASH ONLY • ${escapeHTML(paymentStatus)}</span>
+            </div>
+          </div>
+
+        </div>
+
+        ${
+          showTracking
+            ? `
+              <div style="margin-top:20px">
+                <h3 class="form-title" style="margin-bottom:8px">
+                  <span class="material-icons-round">timeline</span>
+                  Booking Timeline
+                </h3>
+
+                ${timelineHTML(booking)}
+              </div>
+            `
+            : ""
+        }
+
+        <div class="action-row">
+          <button class="btn btn-success btn-small" onclick='whatsappBooking(${safeJSON(booking)})'>
+            <span class="material-icons-round">chat</span>
+            WhatsApp
+          </button>
+
+          <button class="btn btn-outline btn-small" onclick='copyBookingId(${safeJSON(booking)})'>
+            <span class="material-icons-round">content_copy</span>
+            Copy ID
+          </button>
+        </div>
+
+      </div>
+    `;
+  }
+
+  function safeJSON(object){
+    return JSON.stringify(object)
+      .replace(/\\/g,"\\\\")
+      .replace(/'/g,"&#39;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;");
+  }
+
+  window.whatsappBooking = function(booking){
+    openWhatsApp(
+      `Hello Gireesh House Swift, my booking ID is ${booking.bookingId}. I need help with this booking.`
+    );
+  };
+
+  window.copyBookingId = function(booking){
+    copyText(booking.bookingId)
+      .then(()=>toast("Booking ID copied.","success"))
+      .catch(()=>toast("Could not copy Booking ID.","error"));
+  };
+
+  window.viewBookingDetails = function(booking){
+    $("detailsContent").innerHTML =
+      bookingDetailsHTML(booking,false);
+
+    openOverlay("detailsOverlay");
+  };
+
+  window.trackFromHistory = function(booking){
+    $("trackBookingId").value = booking.bookingId;
+    $("trackPhone").value = booking.customerPhone;
+
+    navigate("track");
+
+    setTimeout(()=>{
+      trackBooking();
+    },100);
+  };
+
+  window.rebook = function(booking){
+    $("customerName").value = booking.customerName || "";
+    $("customerPhone").value = booking.customerPhone || "";
+
+    $("pickupAddressInput").value =
+      booking.pickupAddress ||
+      booking.pickupLocation?.address ||
+      "";
+
+    $("deliveryAddressInput").value =
+      booking.deliveryAddress ||
+      booking.deliveryLocation?.address ||
+      "";
+
+    if(booking.pickupLocation){
+      pickupLocation = {
+        lat:Number(booking.pickupLocation.lat),
+        lng:Number(booking.pickupLocation.lng),
+        address:String(
+          booking.pickupLocation.address ||
+          booking.pickupAddress ||
+          ""
+        )
+      };
+
+      $("pickupSelectedAddress").textContent =
+        pickupLocation.address;
+
+      $("pickupSelectedAddress").classList.add("selected");
+    }
+
+    if(booking.deliveryLocation){
+      deliveryLocation = {
+        lat:Number(booking.deliveryLocation.lat),
+        lng:Number(booking.deliveryLocation.lng),
+        address:String(
+          booking.deliveryLocation.address ||
+          booking.deliveryAddress ||
+          ""
+        )
+      };
+
+      $("deliverySelectedAddress").textContent =
+        deliveryLocation.address;
+
+      $("deliverySelectedAddress").classList.add("selected");
+    }
+
+    const service = services.find(
+      s=>s.id === booking.serviceId ||
+         s.name === booking.serviceName
+    );
+
+    if(service){
+      selectService(service);
+    }
+
+    selectedItems = [];
+
+    if(Array.isArray(booking.items)){
+      booking.items.forEach(itemLabel=>{
+        const found = ITEM_OPTIONS.find(
+          x=>x[1].toLowerCase() === String(itemLabel).toLowerCase()
+        );
+
+        if(found){
+          selectedItems.push(found[0]);
+        }else{
+          selectedItems.push("other");
+          $("otherItem").value = String(itemLabel).replace(/^Other:\s*/i,"");
+        }
+      });
+    }
+
+    renderItemChoices();
+
+    navigate("book");
+
+    toast("Previous booking details copied to the booking form.","success");
+  };
+
+  async function loadHistory(){
+    const phone = normalizePhone(
+      $("historyPhone").value
+    );
+
+    if(!validIndianMobile(phone)){
+      toast("Please enter a valid 10-digit mobile number.","error");
+      $("historyPhone").focus();
+      return;
+    }
+
+    showLoader("Loading booking history...");
+
+    try{
+      if(!db){
+        throw new Error("Firestore unavailable");
+      }
+
+      /*
+       * Only query documents belonging to the supplied mobile number.
+       * No collection-wide booking data is rendered.
+       */
+      const q = query(
+        collection(db,"bookings"),
+        where("customerPhone","==",phone)
+      );
+
+      const snapshot = await getDocs(q);
+
+      const bookings = snapshot.docs
+        .map(d=>({id:d.id,...d.data()}))
+        .sort((a,b)=>{
+          const aTime = timestampMillis(a.createdAt);
+          const bTime = timestampMillis(b.createdAt);
+
+          return bTime - aTime;
+        });
+
+      if(!bookings.length){
+        $("historyResult").innerHTML = emptyHTML(
+          "No bookings found",
+          "No booking was found for this mobile number."
+        );
+
+        return;
+      }
+
+      $("historyResult").innerHTML = `
+        <div class="history-list">
+          ${bookings.map(historyCardHTML).join("")}
+        </div>
+      `;
+
+      toast(`${bookings.length} booking${bookings.length === 1 ? "" : "s"} found.`,"success");
+
+    }catch(error){
+      console.error(error);
+
+      $("historyResult").innerHTML = emptyHTML(
+        "Could not load history",
+        "Please check your internet connection and try again."
+      );
+
+      toast("Unable to load booking history.","error");
+
+    }finally{
+      hideLoader();
+    }
+  }
+
+  window.loadHistory = loadHistory;
+
+  function timestampMillis(value){
+    if(!value) return 0;
+
+    try{
+      if(typeof value === "object" && value.toMillis){
+        return value.toMillis();
+      }
+
+      const date = new Date(value);
+
+      if(!Number.isNaN(date.getTime())){
+        return date.getTime();
+      }
+    }catch{}
+
+    return 0;
+  }
+
+  function historyCardHTML(booking){
+    const status =
+      String(booking.bookingStatus || "PENDING").toUpperCase();
+
+    const payment =
+      String(booking.paymentStatus || "PENDING").toUpperCase();
+
+    const amount =
+      booking.finalPrice !== null &&
+      booking.finalPrice !== undefined &&
+      booking.finalPrice !== ""
+        ? booking.finalPrice
+        : booking.estimatedPrice;
+
+    return `
+      <article class="history-card">
+
+        <div class="history-card-top">
+          <div>
+            <h3>${escapeHTML(booking.bookingId)}</h3>
+            <p>${escapeHTML(booking.serviceName || "Service")}</p>
+          </div>
+
+          <span class="status-chip ${statusClass(status)}">
+            ${escapeHTML(statusLabel(status))}
+          </span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px">
+          <div>
+            <div class="small-note">Moving Date</div>
+            <strong style="font-size:12px">${escapeHTML(booking.movingDate || "-")}</strong>
+          </div>
+
+          <div>
+            <div class="small-note">Vehicle</div>
+            <strong style="font-size:12px">${escapeHTML(booking.vehicleName || "-")}</strong>
+          </div>
+
+          <div>
+            <div class="small-note">Amount</div>
+            <strong style="font-size:13px">${formatMoney(amount || 0)}</strong>
+          </div>
+
+          <div>
+            <div class="small-note">Payment</div>
+            <strong style="font-size:11px">${escapeHTML(payment)}</strong>
+          </div>
+        </div>
+
+        <div class="history-bottom">
+          <div class="history-price">
+            ${formatMoney(amount || 0)}
+          </div>
+
+          <div class="history-actions">
+            <button class="icon-btn" title="Track" onclick='trackFromHistory(${safeJSON(booking)})'>
+              <span class="material-icons-round">location_searching</span>
+            </button>
+
+            <button class="icon-btn" title="Details" onclick='viewBookingDetails(${safeJSON(booking)})'>
+              <span class="material-icons-round">visibility</span>
+            </button>
+
+            <button class="icon-btn" title="WhatsApp" onclick='whatsappBooking(${safeJSON(booking)})'>
+              <span class="material-icons-round">chat</span>
+            </button>
+
+            <button class="icon-btn" title="Copy ID" onclick='copyBookingId(${safeJSON(booking)})'>
+              <span class="material-icons-round">content_copy</span>
+            </button>
+
+            <button class="icon-btn" title="Rebook" onclick='rebook(${safeJSON(booking)})'>
+              <span class="material-icons-round">replay</span>
+            </button>
+          </div>
+        </div>
+
+      </article>
+    `;
+  }
+
+  function applyBusinessSettings(data){
+    if(!data) return;
+
+    business = {
+      ...business,
+      ...data
+    };
+
+    const name =
+      data.name ||
+      data.businessName ||
+      businessDefaults.name;
+
+    const tagline =
+      data.tagline ||
+      businessDefaults.tagline;
+
+    const phone =
+      data.phone ||
+      data.businessPhone ||
+      businessDefaults.phone;
+
+    const area =
+      data.serviceArea ||
+      data.location ||
+      businessDefaults.serviceArea;
+
+    $("businessNameTop").textContent = name;
+    $("businessAreaTop").textContent = area;
+    $("heroTagline").textContent = tagline;
+    $("contactPhone").textContent = phone;
+    $("contactLocation").textContent = area;
+
+    const normalizedPhone =
+      normalizePhone(phone) || "9741651293";
+
+    document.querySelectorAll(
+      'a[href^="tel:"]'
+    ).forEach(a=>{
+      a.href = `tel:+91${normalizedPhone}`;
+    });
+  }
+
+  async function loadSettings(){
+    if(!db){
+      applyBusinessSettings(businessDefaults);
+      return;
+    }
+
+    /*
+     * The Admin Side can use settings documents without requiring
+     * a specific single document name. We first listen to the
+     * common "business" document and also fall back to "settings".
+     */
+    try{
+      const businessRef = doc(db,"settings","business");
+
+      settingsUnsubscribe = onSnapshot(
+        businessRef,
+        snap=>{
+          if(snap.exists()){
+            applyBusinessSettings(snap.data());
+          }else{
+            applyBusinessSettings(businessDefaults);
+          }
+        },
+        error=>{
+          console.warn("Business settings listener:",error);
+          applyBusinessSettings(businessDefaults);
+        }
+      );
+
+    }catch(error){
+      console.warn("Settings unavailable:",error);
+      applyBusinessSettings(businessDefaults);
+    }
+  }
+
+  /*
+   * Keep Firestore settings listener separate from the counter
+   * document. The counter document is never displayed to customers.
+   */
+  function resetBookingForm(){
+    $("bookingForm").reset();
+
+    selectedService = null;
+    selectedVehicle = null;
+    selectedItems = [];
+
+    pickupLocation = null;
+    deliveryLocation = null;
+
+    $("selectedServiceName").textContent = "Choose a service";
+    $("selectedServiceDescription").textContent = "Tap to select";
+    $("selectedServiceIcon").textContent = "home_work";
+
+    $("selectedVehicleName").textContent = "Choose a vehicle";
+    $("selectedVehicleDescription").textContent =
+      "Only currently available vehicles can be selected";
+
+    $("pickupSelectedAddress").textContent =
+      "No map location selected yet.";
+
+    $("pickupSelectedAddress").classList.remove("selected");
+
+    $("deliverySelectedAddress").textContent =
+      "No map location selected yet.";
+
+    $("deliverySelectedAddress").classList.remove("selected");
+
+    renderItemChoices();
+    prepareBookingPage();
+  }
+
+  /*
+   * Re-enable confirmation button whenever confirmation dialog
+   * is closed after a failed attempt.
+   */
+  $("confirmOverlay").addEventListener("click",()=>{
+    if(!$("confirmOverlay").classList.contains("show")){
+      $("confirmBookingBtn").disabled = false;
+    }
+  });
+
+  $("customerPhone").addEventListener("input",event=>{
+    event.target.value =
+      event.target.value.replace(/\D/g,"").slice(0,10);
+  });
+
+  $("trackPhone").addEventListener("input",event=>{
+    event.target.value =
+      event.target.value.replace(/\D/g,"").slice(0,10);
+  });
+
+  $("historyPhone").addEventListener("input",event=>{
+    event.target.value =
+      event.target.value.replace(/\D/g,"").slice(0,10);
+  });
+
+  $("movingDate").addEventListener("change",()=>{
+    const value = $("movingDate").value;
+
+    if(!value) return;
+
+    const date = new Date(`${value}T00:00:00`);
+    const today = new Date();
+
+    today.setHours(0,0,0,0);
+
+    if(date < today){
+      $("movingDate").value = "";
+      toast("Past dates are not allowed.","error");
+    }
+  });
+
+  $("pickupAddressInput").addEventListener("input",()=>{
+    if(
+      pickupLocation &&
+      $("pickupAddressInput").value.trim() !== pickupLocation.address
+    ){
+      pickupLocation = null;
+      $("pickupSelectedAddress").textContent =
+        "Address changed. Select the map location again if coordinates are required.";
+
+      $("pickupSelectedAddress").classList.remove("selected");
+    }
+  });
+
+  $("deliveryAddressInput").addEventListener("input",()=>{
+    if(
+      deliveryLocation &&
+      $("deliveryAddressInput").value.trim() !== deliveryLocation.address
+    ){
+      deliveryLocation = null;
+      $("deliverySelectedAddress").textContent =
+        "Address changed. Select the map location again if coordinates are required.";
+
+      $("deliverySelectedAddress").classList.remove("selected");
+    }
+  });
+
+  /*
+   * Pressing Enter in map search performs search.
+   */
+  $("mapSearchInput").addEventListener("keydown",event=>{
+    if(event.key === "Enter"){
+      event.preventDefault();
+      searchMapLocation();
+    }
+  });
+
+  /*
+   * Escape closes the topmost popup.
+   */
+  document.addEventListener("keydown",event=>{
+    if(event.key !== "Escape") return;
+
+    const open =
+      [...document.querySelectorAll(".overlay.show")].pop();
+
+    if(open){
+      closeOverlay(open.id);
+    }
+  });
+
+  /*
+   * Initialize app.
+   */
+  async function init(){
+    applyBusinessSettings(businessDefaults);
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth()+1).padStart(2,"0");
+    const dd = String(today.getDate()).padStart(2,"0");
+
+    $("movingDate").min =
+      `${yyyy}-${mm}-${dd}`;
+
+    renderItemChoices();
+
+    routeFromHash();
+
+    await Promise.all([
+      loadServices(),
+      loadVehicles(),
+      loadSettings()
+    ]);
+
+    /*
+     * If a customer opens Book directly after Firebase data has
+     * loaded, the booking page gets its latest data.
+     */
+    prepareBookingPage();
+  }
+
+  init().catch(error=>{
+    console.error("Application initialization error:",error);
+
+    hideLoader();
+
+    toast(
+      "The application started with limited data. Please refresh if needed.",
+      "warning"
+    );
+  });
+
+</script>
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  crossorigin="">
+</script>
+
+</body>
+</html>
